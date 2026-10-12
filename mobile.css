@@ -1,0 +1,69 @@
+/*
+  The web app only — loaded after the tracker's own styles.
+
+  The tracker was laid out for a wide office screen. These rules make it
+  usable on a phone without changing how it looks on a computer.
+*/
+
+/* a "backup folder on this computer" does not exist on a phone; the copy in MEGA is the backup */
+#connectBackupBtn,
+#regrantBackupBtn { display: none !important; }
+
+/* room for the notch and the home bar when installed on the Home Screen */
+body {
+  padding-top: max(32px, env(safe-area-inset-top));
+  padding-bottom: max(60px, calc(env(safe-area-inset-bottom) + 40px));
+}
+
+@media (max-width: 720px) {
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    padding: max(14px, env(safe-area-inset-top)) 10px max(70px, calc(env(safe-area-inset-bottom) + 50px));
+    overflow-x: hidden;
+  }
+
+  /* iOS zooms the whole page when a field with smaller text is tapped */
+  input, select, textarea { font-size: 16px !important; }
+
+  button { min-height: 40px; }
+  button.small { min-height: 34px; }
+
+  .login-box { padding: 26px 18px !important; }
+
+  /* windows use the full width, and scroll inside themselves */
+  .overlay { padding: 8px !important; align-items: flex-start !important; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .modal {
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: max(8px, env(safe-area-inset-top)) 0 24px;
+    padding: 16px !important;
+  }
+  .modal-actions { flex-wrap: wrap; }
+  .modal-actions button { flex: 1 1 auto; }
+
+  /* the row of buttons under the header wraps onto as many lines as it needs */
+  .session-row { flex-wrap: wrap; justify-content: flex-start !important; gap: 8px; }
+  .session-row > * { flex: 0 1 auto; }
+  .session-row .role-badge { flex: 1 1 100%; text-align: center; }
+
+  /* nothing may be wider than the screen */
+  .wrap, .row, .toolbar, .list, header { max-width: 100%; }
+  .row { padding: 14px 12px !important; }
+  .row-top { flex-wrap: wrap; }
+  .row-top-right { flex-wrap: wrap; }
+  .row-actions { flex-wrap: wrap; max-width: 100%; }
+  .row-meta { grid-template-columns: 1fr 1fr !important; gap: 10px 14px !important; }
+  .sec-cols { grid-template-columns: 1fr !important; }
+
+  table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  #search { min-width: 0 !important; width: 100%; }
+  .tb-field { flex: 1 1 140px; min-width: 0; }
+  .tb-field input, .tb-field select { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .row-meta { grid-template-columns: 1fr !important; }
+  h1 { font-size: 18px !important; }
+}
