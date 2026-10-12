@@ -9,7 +9,7 @@
   The version and the list of files below are filled in by scripts/build-webapp.js.
 */
 
-const VERSION = "3997ed5802f1";
+const VERSION = "38dbfd803d5a";
 const CACHE = 'daxil-app-' + VERSION;
 const FILES = [
   "./",
@@ -44,7 +44,9 @@ const FILES = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE)
-      .then(cache => cache.addAll(FILES))
+      // straight from the host, never from the browser's own short-term cache:
+      // a new version must not be stored with an old copy of some file in it
+      .then(cache => cache.addAll(FILES.map(file => new Request(file, { cache: 'reload' }))))
       .then(() => self.skipWaiting())
   );
 });

@@ -153,6 +153,73 @@
     }).sort(function (a, b) { return (b.timestamp || 0) - (a.timestamp || 0); });
   }
 
+  /*
+    MEGA's own apps attach a "fingerprint" to every file they upload: a short
+    checksum of the contents plus the file's date. MEGA's desktop app will not
+    download a file that has none — it stops and shows "File fingerprint
+    missing" until someone presses Solve. So every file sent from here carries
+    one, built exactly as MEGA builds it (FileFingerprint in MEGA's SDK):
+
+      up to 16 bytes     the bytes themselves, padded with zeros
+      up to 8192 bytes   four CRC-32s, one over each quarter of the file
+      larger             four CRC-32s, each over 32 blocks of 64 bytes spread
+                         evenly through the file
+      then the date in seconds: a count byte and that many bytes, lowest first
+      all of it in MEGA's base64 (URL-safe, no padding)
+  */
+  var CRC_TABLE = (function () {
+    var table = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      table[n] = c >>> 0;
+    }
+    return table;
+  })();
+
+  function crcAdd(state, bytes, start, end) {
+    for (var i = start; i < end; i++) state = CRC_TABLE[(state ^ bytes[i]) & 0xFF] ^ (state >>> 8);
+    return state >>> 0;
+  }
+
+  function megaFingerprint(bytes, mtimeSeconds) {
+    var size = bytes.length;
+    var crc = new Uint8Array(16);
+    var put = function (lane, state) {
+      var v = (state ^ 0xFFFFFFFF) >>> 0;          // highest byte first
+      crc[lane * 4] = v >>> 24; crc[lane * 4 + 1] = (v >>> 16) & 0xFF;
+      crc[lane * 4 + 2] = (v >>> 8) & 0xFF; crc[lane * 4 + 3] = v & 0xFF;
+    };
+
+    if (size <= 16) {
+      crc.set(bytes);
+    } else if (size <= 8192) {
+      for (var i = 0; i < 4; i++) {
+        put(i, crcAdd(0xFFFFFFFF, bytes, Math.floor(i * size / 4), Math.floor((i + 1) * size / 4)));
+      }
+    } else {
+      for (var lane = 0; lane < 4; lane++) {
+        var state = 0xFFFFFFFF;
+        for (var j = 0; j < 32; j++) {
+          var offset = Math.floor((size - 64) * (lane * 32 + j) / 127);
+          state = crcAdd(state, bytes, offset, offset + 64);
+        }
+        put(lane, state);
+      }
+    }
+
+    var date = [];
+    for (var v = Math.max(0, Math.floor(mtimeSeconds)); v > 0; v = Math.floor(v / 256)) date.push(v % 256);
+    var all = new Uint8Array(16 + 1 + date.length);
+    all.set(crc, 0);
+    all[16] = date.length;
+    all.set(date, 17);
+
+    var bin = '';
+    for (var b = 0; b < all.length; b++) bin += String.fromCharCode(all[b]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
   // MEGA dates files to the second; the node's own id keeps two versions within a second apart
   function stampOf(node) {
     var h = 0;
@@ -263,7 +330,12 @@
       for (var b = 0; b < bytes.length; b++) { if (bytes[b] > 127) { ascii = false; break; } }
       var payload = ascii ? new TextDecoder().decode(bytes) : bytes;
       var tempName = TEMP_PREFIX + name + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7) + '.tmp';
-      var sent = await dir.upload({ name: tempName, size: bytes.byteLength }, payload).complete;
+      var sent = await dir.upload({
+        name: tempName,
+        size: bytes.byteLength,
+        // without this MEGA's desktop app refuses to download the file
+        attributes: { c: megaFingerprint(bytes, Date.now() / 1000) }
+      }, payload).complete;
 
       var old = named(dir, name, false);
       for (var i = 0; i < old.length; i++) {
@@ -614,6 +686,7 @@
   // "save straight into a file" has no meaning on a phone; the tracker falls back to its download button
   try { delete window.showSaveFilePicker; } catch (e) { window.showSaveFilePicker = undefined; }
 
+  window.daxilWeb.megaFingerprint = megaFingerprint;
   window.daxilWeb.signOutOfMega = sessionLost;
   // the next look at the folder asks MEGA again instead of trusting the recent listing
   window.daxilWeb.lookAfresh = function () { lastRefresh = 0; };
@@ -649,6 +722,16 @@
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Offline start is not available', e); });
+    });
+
+    // a newer version of the app has just been stored on the device: start using it at once,
+    // instead of at the second opening. (Not on the very first visit, when nothing changes.)
+    var hadWorker = !!navigator.serviceWorker.controller;
+    var restarted = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (!hadWorker || restarted) return;
+      restarted = true;
+      location.reload();
     });
   }
 
