@@ -9,7 +9,7 @@
   The version and the list of files below are filled in by scripts/build-webapp.js.
 */
 
-const VERSION = "38dbfd803d5a";
+const VERSION = "48c1c7db4b57";
 const CACHE = 'daxil-app-' + VERSION;
 const FILES = [
   "./",
@@ -35,6 +35,7 @@ const FILES = [
   "web-shim.js",
   "mobile.css",
   "manifest.webmanifest",
+  "update-bar.js",
   "icons/apple-touch-icon.png",
   "icons/icon-192.png",
   "icons/icon-512.png",
@@ -47,8 +48,15 @@ self.addEventListener('install', event => {
       // straight from the host, never from the browser's own short-term cache:
       // a new version must not be stored with an old copy of some file in it
       .then(cache => cache.addAll(FILES.map(file => new Request(file, { cache: 'reload' }))))
-      .then(() => self.skipWaiting())
   );
+  // A new version does not take over by itself: it waits, the page shows
+  // "a new version is ready", and it takes over when the person presses
+  // "update now" (the message below). The very first installation has nothing
+  // to wait for and starts at once.
+});
+
+self.addEventListener('message', event => {
+  if (event.data === 'daxil:activate') self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {

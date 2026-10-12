@@ -720,18 +720,51 @@
   /* ---------------- offline start ---------------- */
 
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-    window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Offline start is not available', e); });
+    /*
+      A new version published on the host is fetched in the background and
+      kept waiting. The person is told with the bar at the top, and it takes
+      over — with a reload — only when they press "update now".
+    */
+    var updating = false;
+
+    var offerUpdate = function (reg) {
+      // "waiting" with nothing in charge yet is the very first installation, not an update
+      if (!reg.waiting || !navigator.serviceWorker.controller || !window.daxilUpdateBar) return;
+      window.daxilUpdateBar.offer({
+        install: function () {
+          return new Promise(function (resolve, reject) {
+            if (!reg.waiting) { location.reload(); return; }
+            updating = true;
+            reg.waiting.postMessage('daxil:activate');
+            setTimeout(function () { updating = false; reject(new Error('The new version did not start.')); }, 20000);
+          });
+        }
+      });
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (updating) location.reload();
     });
 
-    // a newer version of the app has just been stored on the device: start using it at once,
-    // instead of at the second opening. (Not on the very first visit, when nothing changes.)
-    var hadWorker = !!navigator.serviceWorker.controller;
-    var restarted = false;
-    navigator.serviceWorker.addEventListener('controllerchange', function () {
-      if (!hadWorker || restarted) return;
-      restarted = true;
-      location.reload();
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        offerUpdate(reg);
+        reg.addEventListener('updatefound', function () {
+          var fresh = reg.installing;
+          if (!fresh) return;
+          fresh.addEventListener('statechange', function () {
+            if (fresh.state === 'installed') offerUpdate(reg);
+          });
+        });
+
+        // look for a new version now and then, and whenever the app is brought back to the front
+        var look = function () { reg.update().catch(function () { /* no connection: next time */ }); };
+        setInterval(look, 30 * 60 * 1000);
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') look();
+        });
+        window.daxilWeb.lookForUpdate = look;
+      }).catch(function (e) { console.warn('Offline start is not available', e); });
     });
   }
 
