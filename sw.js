@@ -9,7 +9,7 @@
   The version and the list of files below are filled in by scripts/build-webapp.js.
 */
 
-const VERSION = "48c1c7db4b57";
+const VERSION = "d8dc644e42c4";
 const CACHE = 'daxil-app-' + VERSION;
 const FILES = [
   "./",
@@ -48,12 +48,37 @@ self.addEventListener('install', event => {
       // straight from the host, never from the browser's own short-term cache:
       // a new version must not be stored with an old copy of some file in it
       .then(cache => cache.addAll(FILES.map(file => new Request(file, { cache: 'reload' }))))
+      .then(() => waitForThePersonOrTakeOver())
   );
-  // A new version does not take over by itself: it waits, the page shows
-  // "a new version is ready", and it takes over when the person presses
-  // "update now" (the message below). The very first installation has nothing
-  // to wait for and starts at once.
 });
+
+/*
+  A new version does not normally take over by itself: it waits, the open page
+  shows "a new version is ready", and it takes over when the person presses
+  "update now" (the message below).
+
+  But that only works if the open page knows how to show the bar. A page from
+  an early version does not — it would leave this version waiting for ever. So
+  the open pages are asked first; if none answers, this version takes over at
+  once and is what the app opens with next time.
+*/
+function waitForThePersonOrTakeOver() {
+  return new Promise(resolve => {
+    let channel;
+    try { channel = new BroadcastChannel('daxil-update'); }
+    catch (e) { self.skipWaiting(); resolve(); return; }
+
+    let answered = false;
+    channel.onmessage = event => { if (event.data === 'page-will-offer') answered = true; };
+    channel.postMessage('new-version-ready');
+    setTimeout(() => {
+      channel.close();
+      console.log('daxil app ' + VERSION + (answered ? ': waiting for "update now"' : ': no page could offer it, taking over'));
+      if (!answered) self.skipWaiting();
+      resolve();
+    }, 2000);
+  });
+}
 
 self.addEventListener('message', event => {
   if (event.data === 'daxil:activate') self.skipWaiting();

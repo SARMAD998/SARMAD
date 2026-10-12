@@ -727,6 +727,15 @@
     */
     var updating = false;
 
+    // a new version, once fetched, asks whether an open page can show the bar; this one can.
+    // (A page from an early version cannot answer, and the new version then takes over by itself.)
+    try {
+      var updateChannel = new BroadcastChannel('daxil-update');
+      updateChannel.onmessage = function (event) {
+        if (event.data === 'new-version-ready' && window.daxilUpdateBar) updateChannel.postMessage('page-will-offer');
+      };
+    } catch (e) { /* no such channel on this browser: new versions simply take over at the next opening */ }
+
     var offerUpdate = function (reg) {
       // "waiting" with nothing in charge yet is the very first installation, not an update
       if (!reg.waiting || !navigator.serviceWorker.controller || !window.daxilUpdateBar) return;
