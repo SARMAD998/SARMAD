@@ -11,11 +11,23 @@
 <meta name="apple-mobile-web-app-title" content="نووسراوەکان">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="startup/launch-640x1136-2x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="startup/launch-750x1334-2x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1242x2208-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1125x2436-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="startup/launch-828x1792-2x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1242x2688-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1170x2532-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1284x2778-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1179x2556-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1290x2796-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1206x2622-3x.png">
+<link rel="apple-touch-startup-image" media="screen and (device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="startup/launch-1320x2868-3x.png">
 <script src="vendor/mega.js"></script>
 <script src="update-bar.js"></script>
 <script src="web-shim.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>سیستەمی تۆمارکردنی نووسراوەکان</title>
+<title>Urban Planning by Sarmad Sherzad</title>
 <link rel="stylesheet" href="vendor/fonts/noto-kufi-arabic.css">
 <style>
   :root {
@@ -213,6 +225,122 @@
   .resume-hi { font-size: 12.5px; color: var(--ink-soft); }
   .resume-name { font-size: 19px; font-weight: 800; }
   .resume-box .btn-save { width: 100%; justify-content: center; }
+
+  /*
+    The opening screen, five seconds at every start. The old look: the emblem,
+    "URBAN PLANNING" and the author's name on the paper colour. The new look
+    («دیزاینی نوێ», html.nd): the city plan draws itself in the ministry's blue and
+    the gold of the KRG sun, then the emblem, the name and the author.
+  */
+  #introSplash {
+    position: fixed; inset: 0; z-index: 10000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 50% 42%, #ffffff 0%, var(--paper) 72%);
+    transition: opacity .6s ease;
+  }
+  #introSplash.intro-done { opacity: 0; pointer-events: none; }
+  #introSplash .sp-plan, #introSplash .sp-rule, #introSplash .sp-ku { display: none; }
+  #introSplash .sp-center { text-align: center; padding: 24px 24px 0; animation: introRise .9s ease-out both; }
+  #introSplash .intro-logo {
+    width: 150px; height: 150px; object-fit: contain; display: block; margin: 0 auto 24px;
+    animation: introPulse 2.6s ease-in-out infinite;
+  }
+  #introSplash .sp-title {
+    font-size: 34px; font-weight: 700; letter-spacing: 6px; text-transform: uppercase; color: var(--accent);
+  }
+  #introSplash .sp-by {
+    font-size: 18px; font-weight: 700; color: var(--ink); margin-top: 10px; letter-spacing: 1px;
+    animation: introFade 1s .6s ease-out both;
+  }
+  #introSplash .sp-by span { color: var(--ink-soft); font-weight: 400; }
+  #introSplash .sp-foot { text-align: center; padding: 0 24px 24px; }
+  #introSplash .sp-bar {
+    width: 240px; height: 4px; background: var(--line); border-radius: 4px;
+    margin: 32px auto 12px; overflow: hidden;
+  }
+  #introSplash .sp-bar span {
+    display: block; height: 100%; width: 0; background: var(--accent); border-radius: 4px;
+    animation: introLoad 4.8s cubic-bezier(.4, .1, .3, 1) forwards;
+  }
+  #introSplash .sp-note { font-size: 12px; color: var(--ink-soft); letter-spacing: .5px; }
+  @keyframes introLoad { to { width: 100%; } }
+  @keyframes introRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes introFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes introPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+  @media (max-width: 420px) {
+    #introSplash .sp-title { font-size: 26px; letter-spacing: 4px; }
+    #introSplash .intro-logo { width: 120px; height: 120px; }
+  }
+
+  html.nd #introSplash {
+    background: #0D2A44; color: #fff; overflow: hidden;
+    padding: env(safe-area-inset-top) 20px env(safe-area-inset-bottom);
+  }
+  html.nd #introSplash::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(70% 60% at 50% 45%, rgba(24,78,118,.9), rgba(13,42,68,0) 70%);
+  }
+  html.nd #introSplash .sp-plan { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
+  html.nd #introSplash .sp-l {
+    stroke-dasharray: 1; stroke-dashoffset: 1;
+    animation: spDraw 1.9s cubic-bezier(.5, .1, .25, 1) var(--d, 0s) forwards;
+  }
+  html.nd #introSplash .sp-mn { stroke: rgba(255,255,255,.13); stroke-width: 1; }
+  html.nd #introSplash .sp-gj { stroke: rgba(255,255,255,.2); stroke-width: 1.6; }
+  html.nd #introSplash .sp-mj { stroke: rgba(201,152,46,.55); stroke-width: 2; }
+  html.nd #introSplash .sp-ring { stroke: #C9982E; stroke-width: 3; }
+  html.nd #introSplash .sp-rv { stroke: rgba(140,190,222,.45); stroke-width: 1.4; }
+  html.nd #introSplash .sp-center { position: relative; padding: 0 12px; animation: none; }
+  html.nd #introSplash .intro-logo {
+    width: 128px; height: 128px; margin: 0 auto 22px;
+    filter: drop-shadow(0 12px 26px rgba(0,0,0,.45));
+    opacity: 0; animation: spIn .9s .5s ease-out forwards;
+  }
+  html.nd #introSplash .sp-title {
+    font-size: 42px; line-height: 1.1; letter-spacing: -.01em; text-transform: none; color: #fff;
+    opacity: 0; animation: spRise .8s 1.1s ease-out forwards;
+  }
+  html.nd #introSplash .sp-rule {
+    display: block; width: 0; height: 2px; margin: 18px auto 14px; background: #C9982E;
+    animation: spRule .7s 1.6s ease-out forwards;
+  }
+  html.nd #introSplash .sp-by {
+    font-weight: 500; color: #EBD69E; margin-top: 0; letter-spacing: 0;
+    opacity: 0; animation: spIn .8s 1.9s ease-out forwards;
+  }
+  html.nd #introSplash .sp-by span { color: rgba(255,255,255,.55); }
+  html.nd #introSplash .sp-ku {
+    display: block; font-size: 13px; color: rgba(255,255,255,.6); margin-top: 10px;
+    opacity: 0; animation: spIn .8s 2.3s ease-out forwards;
+  }
+  html.nd #introSplash .sp-foot {
+    position: absolute; left: 0; right: 0; padding: 0;
+    bottom: max(34px, calc(env(safe-area-inset-bottom) + 18px));
+  }
+  html.nd #introSplash .sp-bar {
+    width: 168px; height: 2px; margin: 0 auto 10px; background: rgba(255,255,255,.14); border-radius: 2px;
+  }
+  html.nd #introSplash .sp-bar span {
+    background: #C9982E; border-radius: 0; animation: introLoad 4.6s cubic-bezier(.4, .1, .3, 1) forwards;
+  }
+  html.nd #introSplash .sp-note { font-size: 11.5px; color: rgba(255,255,255,.5); letter-spacing: 0; }
+  @keyframes spDraw { to { stroke-dashoffset: 0; } }
+  @keyframes spIn { from { opacity: 0; transform: scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes spRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes spRule { to { width: 120px; } }
+  @media (max-width: 480px) {
+    html.nd #introSplash .sp-title { font-size: 34px; letter-spacing: -.01em; }
+    html.nd #introSplash .intro-logo { width: 112px; height: 112px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #introSplash *, #introSplash *::before { animation: none !important; }
+    html.nd #introSplash .intro-logo, html.nd #introSplash .sp-title,
+    html.nd #introSplash .sp-by, html.nd #introSplash .sp-ku { opacity: 1; }
+    html.nd #introSplash .sp-l { stroke-dashoffset: 0; }
+    html.nd #introSplash .sp-rule { width: 120px; }
+    #introSplash .sp-bar span { width: 100%; }
+  }
+  @media print { #introSplash { display: none !important; } }
 
   /* first-time setup and the office-key window */
   .first-run {
@@ -801,6 +929,12 @@
   .sys-notice.severe .sn-close, .sys-notice.severe .sn-fix { color: #fff; }
   .sys-notice.severe .sn-close { color: #7a1f1f; }
   .sys-notice.severe .sn-fix { background: #c0392b; border-color: #c0392b; }
+  .dup-group { border: 1px solid #f3c4c4; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; }
+  .dup-group h3 { font-size: 13.5px; margin: 0 0 4px; color: #B91C1C; }
+  .dup-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px;
+    padding: 6px 0; border-top: 1px dashed var(--line); font-size: 12px; }
+  .dup-row .dup-what { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; line-height: 1.7; }
+  .dup-row .dup-keep { color: #15803D; font-weight: 700; font-size: 11.5px; }
   .backup-settings { border-top: 1px dashed var(--line); margin-top: 16px; padding-top: 14px; }
 
   .new-place-row { display: flex; gap: 6px; margin-top: 6px; align-items: center; }
@@ -1438,6 +1572,7 @@
   }
   .login-prompt span { display: block; font-size: 11.5px; color: var(--ink-soft); font-weight: 400; }
 
+  .design-switch-row { text-align: center; margin-top: 4px; }
   .login-footer {
     margin-top: 26px; padding-top: 16px;
     border-top: 1px solid var(--line);
@@ -1668,6 +1803,215 @@
     position: relative;
     z-index: 1;
   }
+
+  /* ════════════════════════════════════════════════════════════════════
+     The new look («دیزاینی نوێ», 2.93): ministry blue, a city plan drawn faintly behind the
+     header and the sign-in screen, and one line of KRG gold. Everything
+     else stays quiet — white sheets on a cool grey desk, so the records
+     are what the eye reads. Screen only: printing keeps its own rules.
+     Chosen per computer or phone: every rule here is under :where(html.nd), which
+     adds no weight, so each rule wins only where the old one it replaces did.
+     ════════════════════════════════════════════════════════════════════ */
+  html.nd {
+    --ink: #17283A;
+    --ink-soft: #5D6B7A;
+    --paper: #EDF1F4;
+    --card: #FFFFFF;
+    --line: #D6DEE6;
+    --accent: #123A5A;
+    --navy: #0D2A44;
+    --gold: #C9982E;
+    --gold-soft: #EBD69E;
+    --tab-pending: #C27A12;
+    --tab-done: #2E7D5B;
+    --plan: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%201200%20800%22%3E%3Cdefs%3E%3Cmask%20id%3D%22pm%22%3E%3Crect%20width%3D%221200%22%20height%3D%22800%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%22600%22%20cy%3D%22400%22%20r%3D%22222%22%20fill%3D%22%23000%22%2F%3E%3C%2Fmask%3E%3C%2Fdefs%3E%3Cg%20fill%3D%22none%22%20stroke-linecap%3D%22round%22%3E%3Cg%20mask%3D%22url(%23pm)%22%3E%3Cpath%20d%3D%22M20%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M76%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M132%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M188%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M244%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M300%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M356%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M412%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M468%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M524%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M580%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M636%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M692%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M748%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M804%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M860%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M916%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M972%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M1028%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M1084%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M1140%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M1196%200V800%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%2022H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%2074H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%20126H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20178H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20230H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20282H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%20334H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20386H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20438H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20490H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%20542H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20594H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20646H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20698H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.09%22%20stroke-width%3D%221.6%22%2F%3E%3Cpath%20d%3D%22M0%20750H1200%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3C%2Fg%3E%3Cpath%20d%3D%22M765.5%20270.7L1309.2%20-154.1%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.11%22%20stroke-width%3D%222.2%22%2F%3E%3Cpath%20d%3D%22M774.1%20517.4L1346.1%20903.3%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.11%22%20stroke-width%3D%222.2%22%2F%3E%3Cpath%20d%3D%22M434.5%20529.3L-109.2%20954.1%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.11%22%20stroke-width%3D%222.2%22%2F%3E%3Cpath%20d%3D%22M434.5%20270.7L-109.2%20-154.1%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.11%22%20stroke-width%3D%222.2%22%2F%3E%3Cpath%20d%3D%22M740.4%20458.2L794%20480.4%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M658.2%20540.4L680.4%20594%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M541.8%20540.4L519.6%20594%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M459.6%20458.2L406%20480.4%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M459.6%20341.8L406%20319.6%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M541.8%20259.6L519.6%20206%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M658.2%20259.6L680.4%20206%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M740.4%20341.8L794%20319.6%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M752%20400A152%20152%200%201%201%20448%20400A152%20152%200%201%201%20752%20400%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M810%20400A210%20210%200%201%201%20390%20400A210%20210%200%201%201%20810%20400%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.16%22%20stroke-width%3D%223.2%22%2F%3E%3Cpath%20d%3D%22M938%20400A338%20338%200%201%201%20262%20400A338%20338%200%201%201%20938%20400%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.07%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M0%20612C180%20562%20330%20684%20520%20644S860%20522%201200%20588%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.12%22%20stroke-width%3D%221.4%22%2F%3E%3Cpath%20d%3D%22M0%20632C180%20582%20330%20704%20520%20664S860%20542%201200%20608%22%20stroke%3D%22%23fff%22%20stroke-opacity%3D%220.12%22%20stroke-width%3D%221.4%22%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E");
+  }
+
+  @media screen {
+    :where(html.nd) body { background: var(--paper); color: var(--ink); }
+    :where(html.nd) .top-bar { display: none; }
+    :where(html.nd) body::before { opacity: .05; }
+
+    /* ── the header band ── */
+    :where(html.nd) #appView > header, :where(html.nd) #secretView header {
+      position: relative; overflow: hidden; align-items: center;
+      background-color: var(--navy);
+      background-image: var(--plan);
+      background-repeat: no-repeat;
+      background-size: 1500px auto;
+      background-position: 32% 46%;
+      color: #fff; border: 0; border-radius: 16px;
+      padding: 22px 28px 25px; margin-bottom: 14px;
+      box-shadow: 0 18px 40px -28px rgba(13,42,68,.85);
+    }
+    :where(html.nd) #appView > header::after, :where(html.nd) #secretView header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--gold);
+    }
+    :where(html.nd) #secretView header { background-color: #3A121B; }
+    :where(html.nd) #secretView header::after { background: #C8505F; }
+    :where(html.nd) #appView > header .logo-img, :where(html.nd) #secretView header .logo-img {
+      width: 76px !important; height: 76px !important;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.4));
+    }
+    :where(html.nd) #appView > header .ministry-name, :where(html.nd) #secretView header .ministry-name {
+      color: #fff; font-size: 25px; font-weight: 700; letter-spacing: 0; text-transform: none; line-height: 1.25;
+    }
+    :where(html.nd) #appView > header .sub { color: rgba(255,255,255,.74); font-size: 13px; margin-top: 4px; }
+    :where(html.nd) #secretView header .secret-sub { color: #F2B9C1; letter-spacing: 0; }
+    :where(html.nd) header .stats { gap: 10px; align-items: stretch; flex-wrap: wrap; color: rgba(255,255,255,.72); font-size: 12px; }
+    :where(html.nd) header .stats > div {
+      min-width: 96px; padding: 8px 16px 9px; text-align: center;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.16); border-radius: 12px;
+    }
+    :where(html.nd) header .stats b { color: #fff; font-size: 24px; line-height: 1.25; }
+    :where(html.nd) #statPending, :where(html.nd) #secPending { color: var(--gold-soft); }
+    :where(html.nd) .overview-btn {
+      align-self: center; padding: 10px 16px; border-radius: 10px;
+      background: var(--gold); border-color: var(--gold); color: #10263A; font-weight: 700;
+    }
+    :where(html.nd) .overview-btn:hover { background: #D8A941; border-color: #D8A941; }
+
+    /* ── the tool rail under the header ── */
+    :where(html.nd) .session-row {
+      flex-wrap: wrap; justify-content: flex-start; gap: 6px;
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 8px 10px; margin-bottom: 14px;
+    }
+    :where(html.nd) .role-badge {
+      margin-inline-end: auto; padding: 5px 14px; border-radius: 999px;
+      background: #EEF3F8; border: 1px solid #D3DEE9; color: var(--accent); font-size: 12px; font-weight: 500;
+    }
+
+    /* ── buttons ── */
+    :where(html.nd) button {
+      border-radius: 10px; background: var(--accent); border-color: var(--accent); color: #fff;
+      transition: background-color .15s, border-color .15s, color .15s;
+    }
+    :where(html.nd) button:not([class]):hover { background: var(--navy); border-color: var(--navy); }
+    :where(html.nd) button.ghost { background: var(--card); color: var(--ink); border-color: var(--line); }
+    :where(html.nd) button.ghost:hover { background: #F1F5F9; border-color: #BCC9D6; color: var(--accent); }
+    :where(html.nd) button.small { border-radius: 8px; padding: 5px 11px; font-size: 12px; }
+    :where(html.nd) button:focus-visible, :where(html.nd) a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    :where(html.nd) .btn-add { background: var(--accent); border-color: var(--accent); box-shadow: 0 8px 16px -10px rgba(18,58,90,.9); }
+    :where(html.nd) .btn-add:hover { background: var(--navy); border-color: var(--navy); }
+    :where(html.nd) #addOutBtn { background: #0F6A75 !important; border-color: #0F6A75; }
+    :where(html.nd) #addOutBtn:hover { background: #0B5761 !important; border-color: #0B5761; }
+    :where(html.nd) #addSecretBtn { background: #6E1F2B !important; border-color: #6E1F2B; }
+    :where(html.nd) #addSecretBtn:hover { background: #561722 !important; border-color: #561722; }
+    :where(html.nd) .btn-save { background: #2A7A55; border-color: #2A7A55; }
+    :where(html.nd) .btn-save:hover { background: #21634A; border-color: #21634A; }
+    :where(html.nd) .btn-print { background: var(--card); color: var(--accent); border-color: var(--line); }
+    :where(html.nd) .btn-print:hover { background: #F1F5F9; border-color: #BCC9D6; color: var(--accent); }
+    :where(html.nd) .btn-cancel { background: #64748B; border-color: #64748B; }
+    :where(html.nd) .btn-edit { background: #E8B04B; border-color: #E8B04B; color: #2B2112; }
+    :where(html.nd) .btn-edit:hover { background: #D99E35; border-color: #D99E35; color: #2B2112; }
+    :where(html.nd) .place-del-btn { background: #B23B31; border-color: #B23B31; }
+    :where(html.nd) .place-del-btn:hover { background: #962F27; border-color: #962F27; }
+    :where(html.nd) button.dl-both { border-radius: 12px; }
+
+    /* ── fields ── */
+    :where(html.nd) input, :where(html.nd) select, :where(html.nd) textarea { border-radius: 10px; border-color: #CAD4DE; padding: 9px 12px; }
+    :where(html.nd) input[type=checkbox], :where(html.nd) input[type=radio] { padding: 0; }
+    :where(html.nd) input:focus, :where(html.nd) select:focus, :where(html.nd) textarea:focus {
+      border-color: var(--accent); box-shadow: 0 0 0 3px rgba(201,152,46,.24);
+    }
+    :where(html.nd) .tb-field label, :where(html.nd) .field label { color: var(--ink-soft); font-weight: 500; }
+
+    /* ── the search bar ── */
+    :where(html.nd) #appView > .toolbar {
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 12px 14px; align-items: flex-end;
+    }
+    :where(html.nd) #search { min-width: 260px; }
+    :where(html.nd) .warida-search input {
+      width: 190px; text-align: center; font-weight: 700; letter-spacing: .02em;
+      border-color: #B9C9D8; background: #F7FAFC;
+    }
+
+    /* ── the records ── */
+    :where(html.nd) .row {
+      border-radius: 14px; border-color: var(--line); border-right-width: 5px;
+      padding: 18px 22px; box-shadow: 0 1px 2px rgba(23,40,58,.05);
+    }
+    :where(html.nd) .row-top { border-bottom-color: #E5EBF0; }
+    :where(html.nd) .seq-tag { background: var(--accent); border-radius: 9px; box-shadow: inset 0 -3px 0 var(--gold); }
+    :where(html.nd) .col-label { color: var(--ink-soft); font-size: 11.5px; }
+    :where(html.nd) .badge { border-radius: 999px; }
+    :where(html.nd) .badge.status-pending { background: #FBEAE6; color: #A2311F; box-shadow: inset 0 0 0 1px #F1C1B6; }
+    :where(html.nd) .badge.status-done { background: #E4F2EA; color: #1F6A47; box-shadow: inset 0 0 0 1px #BCDECB; }
+    :where(html.nd) .empty { background: var(--card); border-color: #C9D3DD; border-radius: 14px; }
+
+    /* ── panels ── */
+    :where(html.nd) .dashboard, :where(html.nd) .advanced-panel { border-radius: 16px; border-color: var(--line); }
+    :where(html.nd) .dash-head h3 { color: var(--ink); }
+    :where(html.nd) .dash-card { background: #F5F7FA; border-color: #E0E6EC; border-radius: 12px; }
+    :where(html.nd) .reason-tabs button { border-radius: 999px; }
+    :where(html.nd) .reason-tabs button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    :where(html.nd) .pager button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+    :where(html.nd) .sys-notice, :where(html.nd) .clock-warn, :where(html.nd) .sync-warn, :where(html.nd) .backup-status-box { border-radius: 12px; }
+    :where(html.nd) .stat-table th, :where(html.nd) .ov-table th { background: #EEF2F6; color: var(--ink); }
+    :where(html.nd) .toast { border-radius: 12px; }
+
+    /* ── windows ── */
+    :where(html.nd) .overlay {
+      background: rgba(9,26,42,.55);
+      -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    }
+    :where(html.nd) .modal {
+      border: 0; border-top: 5px solid var(--accent); border-radius: 18px; padding: 26px 28px;
+      box-shadow: 0 40px 90px -40px rgba(8,26,44,.75);
+    }
+    :where(html.nd) .modal h2 { font-size: 18px; color: var(--ink); }
+
+    /* ── the sign-in screen: the plan, full size, behind a white card ── */
+    :where(html.nd) .login-view {
+      position: fixed; inset: 0; z-index: 4; min-height: 0;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+      padding: max(28px, env(safe-area-inset-top)) 16px max(28px, env(safe-area-inset-bottom));
+      background-color: var(--navy); background-image: var(--plan);
+      background-size: cover; background-position: center; background-repeat: no-repeat;
+    }
+    :where(html.nd) .login-box {
+      margin: auto; border: 0; border-top: 5px solid var(--gold); border-radius: 20px;
+      box-shadow: 0 40px 100px -40px rgba(0,0,0,.7);
+    }
+    :where(html.nd) .login-box .ministry-name {
+      color: var(--ink); font-size: 27px; font-weight: 700; letter-spacing: 0; text-transform: none;
+    }
+    :where(html.nd) .login-sub { color: var(--ink-soft); }
+    :where(html.nd) .role-choice button { border-radius: 12px; padding: 13px; }
+    :where(html.nd) .secret-entry { background: #6E1F2B; border-color: #6E1F2B; }
+    :where(html.nd) .login-footer { color: var(--ink-soft); border-top-color: #E5EBF0; }
+
+    /* the buttons on a record: one filled action, the rest quiet */
+    :where(html.nd) .row-actions { flex-wrap: wrap; justify-content: flex-end; }
+    :where(html.nd) .row-actions button.small { border-radius: 8px; font-weight: 600; }
+    :where(html.nd) .row-actions .btn-edit { background: var(--accent); border-color: var(--accent); color: #fff; }
+    :where(html.nd) .row-actions .btn-edit:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+    :where(html.nd) .btn-sadir { background: #0F6A75; }
+    :where(html.nd) .btn-sadir:hover { background: #0B5761; }
+    :where(html.nd) .btn-flow { background: var(--card); color: var(--accent); border: 1px solid var(--line); }
+    :where(html.nd) .btn-flow:hover { background: #F1F5F9; color: var(--accent); border-color: #BCC9D6; }
+    :where(html.nd) .row-actions .place-del-btn { background: var(--card); color: #A8352B; border-color: #EBC2BC; }
+    :where(html.nd) .row-actions .place-del-btn:hover { background: #FBEDEA; color: #8E2B23; border-color: #DDA59C; }
+    :where(html.nd) .dashboard .btn-edit { background: var(--card); color: var(--accent); border-color: var(--line); }
+    :where(html.nd) .dashboard .btn-edit:hover { background: #F1F5F9; color: var(--accent); border-color: #BCC9D6; }
+    :where(html.nd) .login-sync button { background: var(--accent); }
+    :where(html.nd) .login-sync button:hover { background: var(--navy); }
+
+    @media (max-width: 560px) {
+      :where(html.nd) #appView > header, :where(html.nd) #secretView header { padding: 18px 16px 20px; border-radius: 14px; background-size: 1100px auto; }
+      :where(html.nd) #appView > header .ministry-name, :where(html.nd) #secretView header .ministry-name { font-size: 21px; }
+      :where(html.nd) #appView > header .logo-img, :where(html.nd) #secretView header .logo-img { width: 60px !important; height: 60px !important; }
+      :where(html.nd) header .stats { width: 100%; }
+      :where(html.nd) header .stats > div { flex: 1 1 0; min-width: 0; padding: 8px 6px; }
+      :where(html.nd) .overview-btn { flex: 1 1 100%; }
+      :where(html.nd) #appView > .toolbar { padding: 10px; }
+      :where(html.nd) #search { min-width: 0; }
+      :where(html.nd) .warida-search input { width: 100%; }
+      :where(html.nd) .modal { border-radius: 16px; }
+    }
+  }
 </style>
 <script src="vendor/xlsx.full.min.js"></script>
 <script>
@@ -1749,6 +2093,38 @@ document.addEventListener('DOMContentLoaded', function () {
 <link rel="stylesheet" href="mobile.css">
 </head>
 <body>
+<script>
+/* which look this computer or phone shows — the old one unless «دیزاینی نوێ» was chosen here */
+(function () {
+  try { if (localStorage.getItem('designChoice') === 'new') document.documentElement.classList.add('nd'); } catch (e) {}
+})();
+</script>
+<!-- the opening screen: the author's name for five seconds while the system starts underneath -->
+<div id="introSplash" dir="ltr" aria-hidden="true">
+  <svg class="sp-plan" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><mask id="spPlanMask"><rect width="1200" height="800" fill="#fff"/><circle cx="600" cy="400" r="222" fill="#000"/></mask></defs><g fill="none" stroke-linecap="round"><g mask="url(#spPlanMask)"><path d="M20 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.35s"/><path d="M76 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.44s"/><path d="M132 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.53s"/><path d="M188 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.62s"/><path d="M244 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.71s"/><path d="M300 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.80s"/><path d="M356 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.89s"/><path d="M412 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.35s"/><path d="M468 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.44s"/><path d="M524 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.53s"/><path d="M580 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.62s"/><path d="M636 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.71s"/><path d="M692 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.80s"/><path d="M748 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.89s"/><path d="M804 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.35s"/><path d="M860 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.44s"/><path d="M916 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.53s"/><path d="M972 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.62s"/><path d="M1028 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.71s"/><path d="M1084 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.80s"/><path d="M1140 0V800" pathLength="1" class="sp-l sp-gj" style="--d:0.89s"/><path d="M1196 0V800" pathLength="1" class="sp-l sp-mn" style="--d:0.35s"/><path d="M0 22H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.45s"/><path d="M0 74H1200" pathLength="1" class="sp-l sp-gj" style="--d:0.55s"/><path d="M0 126H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.65s"/><path d="M0 178H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.75s"/><path d="M0 230H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.85s"/><path d="M0 282H1200" pathLength="1" class="sp-l sp-gj" style="--d:0.45s"/><path d="M0 334H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.55s"/><path d="M0 386H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.65s"/><path d="M0 438H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.75s"/><path d="M0 490H1200" pathLength="1" class="sp-l sp-gj" style="--d:0.85s"/><path d="M0 542H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.45s"/><path d="M0 594H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.55s"/><path d="M0 646H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.65s"/><path d="M0 698H1200" pathLength="1" class="sp-l sp-gj" style="--d:0.75s"/><path d="M0 750H1200" pathLength="1" class="sp-l sp-mn" style="--d:0.85s"/></g><path d="M765.5 270.7L1309.2 -154.1" pathLength="1" class="sp-l sp-mj" style="--d:0.15s"/><path d="M774.1 517.4L1346.1 903.3" pathLength="1" class="sp-l sp-mj" style="--d:0.23s"/><path d="M434.5 529.3L-109.2 954.1" pathLength="1" class="sp-l sp-mj" style="--d:0.31s"/><path d="M434.5 270.7L-109.2 -154.1" pathLength="1" class="sp-l sp-mj" style="--d:0.39s"/><path d="M740.4 458.2L794 480.4" pathLength="1" class="sp-l sp-mn" style="--d:0.70s"/><path d="M658.2 540.4L680.4 594" pathLength="1" class="sp-l sp-mn" style="--d:0.75s"/><path d="M541.8 540.4L519.6 594" pathLength="1" class="sp-l sp-mn" style="--d:0.80s"/><path d="M459.6 458.2L406 480.4" pathLength="1" class="sp-l sp-mn" style="--d:0.85s"/><path d="M459.6 341.8L406 319.6" pathLength="1" class="sp-l sp-mn" style="--d:0.90s"/><path d="M541.8 259.6L519.6 206" pathLength="1" class="sp-l sp-mn" style="--d:0.95s"/><path d="M658.2 259.6L680.4 206" pathLength="1" class="sp-l sp-mn" style="--d:1.00s"/><path d="M740.4 341.8L794 319.6" pathLength="1" class="sp-l sp-mn" style="--d:1.05s"/><path d="M752 400A152 152 0 1 1 448 400A152 152 0 1 1 752 400" pathLength="1" class="sp-l sp-mn" style="--d:0.60s"/><path d="M810 400A210 210 0 1 1 390 400A210 210 0 1 1 810 400" pathLength="1" class="sp-l sp-ring" style="--d:0.10s"/><path d="M938 400A338 338 0 1 1 262 400A338 338 0 1 1 938 400" pathLength="1" class="sp-l sp-mn" style="--d:0.30s"/><path d="M0 612C180 562 330 684 520 644S860 522 1200 588" pathLength="1" class="sp-l sp-rv" style="--d:0.25s"/><path d="M0 632C180 582 330 704 520 664S860 542 1200 608" pathLength="1" class="sp-l sp-rv" style="--d:0.32s"/></g></svg>
+  <div class="sp-center">
+    <img class="intro-logo" alt="">
+    <div class="sp-title">Urban Planning</div>
+    <div class="sp-rule"></div>
+    <div class="sp-by"><span>by</span> Sarmad Sherzad</div>
+    <div class="sp-ku" dir="rtl">سیستەمی تۆمارکردنی نووسراوەکان</div>
+  </div>
+  <div class="sp-foot">
+    <div class="sp-bar"><span></span></div>
+    <div class="sp-note">Opening the system&hellip;</div>
+  </div>
+</div>
+<script>
+(function () {
+  var splash = document.getElementById('introSplash');
+  var logo = splash.querySelector('.intro-logo');
+  if (window.KRG_LOGO_URL) logo.src = window.KRG_LOGO_URL; else logo.remove();
+  setTimeout(function () {
+    splash.classList.add('intro-done');
+    setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 700);
+  }, 5000);
+})();
+</script>
 <div class="wrap">
 
   <div class="top-bar"></div>
@@ -1832,8 +2208,11 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="login-footer" id="loginFooter">
-        Version <span id="appVersion">2.89.0</span><br>
+        Version <span id="appVersion">2.95.0</span><br>
         &copy; 2026 <span id="loginFooterMinistry">وەزارەتی شارەوانی و گەشتوگوزار</span>
+      </div>
+      <div class="design-switch-row">
+        <button type="button" class="admin-link design-toggle" data-design-toggle></button>
       </div>
     </div>
   </div>
@@ -1877,7 +2256,7 @@ document.addEventListener('DOMContentLoaded', function () {
       <div><b id="statPending">0</b>ماوە</div>
       <div><b id="statDone">0</b>تەواو بووە</div>
       <button type="button" id="overviewBtn" class="overview-btn" style="display:none;">
-        بینینی هەموو بەڕێوەبەرایەتییەکان
+        بینینی هەموو هۆبە و فەرمانبەران
       </button>
     </div>
   </header>
@@ -1900,7 +2279,12 @@ document.addEventListener('DOMContentLoaded', function () {
     <button class="ghost small icon-btn" id="onlineBtn" style="display:none;" title="کێ ئۆنلاینە؟"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2"/><circle cx="19" cy="5" r="2.4" fill="#16A34A" stroke="none"/></svg></button>
     <button class="ghost small icon-btn" id="backupBtn"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>باکئەپ</span></button>
     <button class="ghost small" id="syncBtn"><span class="sync-dot" id="syncDot"></span>هاوکاتکردن</button>
+    <button type="button" class="ghost small design-toggle" data-design-toggle></button>
     <button class="ghost small" id="logoutBtn">دەرچوون</button>
+  </div>
+
+  <div class="sys-notice severe" id="dupNotice">
+    <div class="sn-body" id="dupNoticeBody"></div>
   </div>
 
   <div class="sys-notice" id="sysNotice">
@@ -1913,6 +2297,11 @@ document.addEventListener('DOMContentLoaded', function () {
       <label>گەڕان</label>
 <select id="yearSelect" class="year-select" title="ساڵی بینین"></select>
       <input id="search" type="text" placeholder="گەڕان بەپێی ژمارە، بابەت، شوێن، ناو...">
+    </div>
+    <div class="tb-field warida-search" id="waridaSearchWrap" style="display:none;">
+      <label for="searchWarida">ژمارەی واریدە</label>
+      <input id="searchWarida" type="text" inputmode="numeric" autocomplete="off" maxlength="12"
+             placeholder="تەنها بە ژمارەی واریدە بگەڕێ">
     </div>
     <button class="ghost" id="toggleFiltersBtn">فلتەر و ئێکسپۆرت</button>
     <button class="btn-print" id="printPendingBtn" style="display:none;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span>چاپکردنی ماوەکان</span></button>
@@ -2116,6 +2505,17 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
             <div class="status-preview" id="phoneHint" style="margin:2px 0 0; display:none;"></div>
           </div>
+          <!-- offered only to accounts given «گواستنەوە لە ناو نووسراو»; the names come from the list the super admin keeps -->
+          <div class="field" id="f-transfer-wrap" style="display:none;">
+            <label for="f-transfer">گواستنەوەی بەڕێوەبەر بۆ</label>
+            <select id="f-transfer"></select>
+            <div class="status-preview" style="margin:2px 0 0;">تەنها ئەو ناوانەی بەڕێوەبەری سەرەکی تۆماری کردوون.</div>
+          </div>
+          <!-- incoming letters only: a letter that only goes out is never "for information" -->
+          <label class="perm-item" id="infoOnlyWrap" style="display:none; margin:10px 0 4px;">
+            <input type="checkbox" id="f-infoonly">
+            <span>تەنها بۆ زانیاری — لە ڕاپۆرت، چاپکردن و داشبۆرد دەرناکەوێت</span>
+          </label>
         </div>
 
         <div class="form-col col-out">
@@ -2177,11 +2577,6 @@ document.addEventListener('DOMContentLoaded', function () {
         <button type="button" class="combo-arrow" data-combo="f-reason" tabindex="-1">&#9662;</button>
         <div class="combo-list" id="f-reason-list"></div>
       </div>
-
-      <label class="perm-item" id="infoOnlyWrap" style="display:none; margin:10px 0 4px;">
-        <input type="checkbox" id="f-infoonly">
-        <span>تەنها بۆ زانیاری — لە ڕاپۆرت، چاپکردن و داشبۆرد دەرناکەوێت</span>
-      </label>
 
       <div class="status-preview">دۆخ: <span id="statusPreview">ماوە</span> (بە شێوەیەکی خۆکار بەپێی ژمارەی دەرچوو دیاری دەکرێت)</div>
       <div class="shortcut-hint">
@@ -2734,6 +3129,20 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
       </div>
 
+      <div class="backup-settings" id="fullBackupWrap" style="border-color:#16A34A;">
+        <h2 style="font-size:15px; color:#15803D;">باکئەپی تەواوی سیستەم</h2>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-8px; line-height:1.9;">
+          هەموو شتێک دادەبەزێت: نووسراوەکانی <b>تیمی ١ و تیمی ٢</b>، <b>بەکارهێنەران</b>،
+          <b>ژمارەی واریدە و ژمارەی دەرچووی هەردوو تیم</b> (دوایین ژمارە، ژمارەی داهاتوو و ڕێکخستنەکانیان)،
+          لیستەکان، سڕاوەکان و تۆماری گۆڕانکارییەکان — پەڕگەی JSON بۆ گەڕاندنەوە، ئێکسڵ بۆ خوێندنەوە،
+          و پەڕگەی بەکارهێنەران.
+        </p>
+        <div class="new-place-row" style="margin-top:10px;">
+          <button type="button" class="small btn-save" id="fullBackupBtn">داگرتنی باکئەپی تەواو</button>
+        </div>
+        <div id="fullBackupResult"></div>
+      </div>
+
       <div class="backup-settings" style="border-color:#DC2626; background:#fdecec;">
         <h2 style="font-size:15px; color:#B91C1C;">دەستپێکردنەوەی سیستەم بۆ کاری ڕاستەقینە</h2>
         <p style="font-size:11.5px; color:#7f1d1d; margin-top:-8px; line-height:1.9;">
@@ -2749,6 +3158,19 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <div class="new-place-row" style="margin-top:10px;">
           <button type="button" class="small place-del-btn" id="freshStartBtn">دەستپێکردنەوە</button>
+        </div>
+      </div>
+
+      <div class="backup-settings" style="border-color:#16A34A;">
+        <h2 style="font-size:15px; color:#15803D;">گەڕاندنەوەی داتای سڕاوە</h2>
+        <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-8px; line-height:1.9;">
+          داتاکان بگەڕێنەوە ناو سیستەم لە پەڕگەی باکئەپ — بۆ نموونە ئەو پەڕگەیەی پێش «دەستپێکردنەوە»
+          دابەزێنرا — یان لە باکئەپەکانی فۆڵدەری MEGA. هیچ تۆمارێکی ئێستا ناسڕدرێتەوە؛ تەنها ئەوانەی
+          کەم بوون زیاد دەکرێن. باکئەپە ناوخۆییەکانی خوارەوەش دەتوانرێن بگەڕێنرێنەوە.
+        </p>
+        <div class="new-place-row" style="margin-top:10px; flex-wrap:wrap; gap:8px;">
+          <button type="button" class="small btn-save" id="restoreFileBtn">گەڕاندنەوە لە پەڕگەی باکئەپ</button>
+          <button type="button" class="small ghost" id="restoreFolderBtn">باکئەپەکانی فۆڵدەری MEGA</button>
         </div>
       </div>
 
@@ -2860,6 +3282,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
       <div class="modal-actions">
         <button class="ghost" id="closeSyncBtn">داخستن</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="dupOverlay">
+    <div class="modal" style="max-width:640px;">
+      <h2>ژمارەی دووبارە</h2>
+      <div class="backup-note" style="margin-top:-6px; margin-bottom:10px; line-height:1.9;">
+        ئەم نووسراوانە هەمان ژمارەیان هەیە — زۆربەی کات لەبەر ئەوەی دوو کۆمپیوتەر لە هەمان کاتدا تۆماریان کردووە.
+        یەکەمیان ژمارەکەی خۆی دەهێڵێتەوە. بۆ ئەوانی تر «ژمارەی نوێ بدە» دابگرە، پاشان ژمارە نوێیەکە لەسەر کاغەزەکەش بنووسە.
+      </div>
+      <div id="dupList" style="max-height:60vh; overflow:auto;"></div>
+      <div class="modal-actions">
+        <button class="ghost" id="closeDupBtn">داخستن</button>
       </div>
     </div>
   </div>
@@ -3895,8 +4331,41 @@ function applyBrand() {
   });
   const f = document.getElementById('loginFooterMinistry');
   if (f) f.textContent = brandSettings.ministry || DEFAULT_BRAND.ministry;
-  try { document.title = (brandSettings.title || DEFAULT_BRAND.title) + ' — سیستەمی نووسراوەکان'; } catch (e) {}
+  // the window's own title is the same everywhere, in English, with the author's name
+  try { document.title = APP_WINDOW_TITLE; } catch (e) {}
 }
+
+const APP_WINDOW_TITLE = 'Urban Planning by Sarmad Sherzad';
+
+/*
+  ── دیزاینی کۆن / دیزاینی نوێ ─────────────────────────────────────────
+  Two looks for the same system. Each computer or phone keeps its own choice
+  (it is not sent to the others); the old look is the default. The new look's
+  rules all sit under <html class="nd">, set by the small script after <body>
+  before anything is drawn.
+*/
+const DESIGN_KEY = 'designChoice';
+
+function isNewDesign() {
+  return document.documentElement.classList.contains('nd');
+}
+
+function renderDesignToggles() {
+  document.querySelectorAll('[data-design-toggle]').forEach(btn => {
+    btn.textContent = isNewDesign() ? 'دیزاینی کۆن' : 'دیزاینی نوێ';
+    btn.title = isNewDesign() ? 'گەڕانەوە بۆ دیزاینی کۆن' : 'بینینی دیزاینی نوێ';
+  });
+}
+
+function setDesign(name) {
+  document.documentElement.classList.toggle('nd', name === 'new');
+  try { localStorage.setItem(DESIGN_KEY, name === 'new' ? 'new' : 'old'); } catch (e) {}
+  renderDesignToggles();
+}
+
+document.querySelectorAll('[data-design-toggle]').forEach(btn =>
+  btn.addEventListener('click', () => setDesign(isNewDesign() ? 'old' : 'new')));
+renderDesignToggles();
 
 const SEQ_KEY = 'seqSettings';
 const SECRET_NUM_KEY = 'secretNumSettings';
@@ -4162,6 +4631,298 @@ function canEditWarida() {
 }
 
 /*
+  ── The numbering rules travel between computers ───────────────────────
+  Each computer used to keep its own copy of the starting numbers, so a
+  start changed on one computer was unknown to the others and they counted
+  from different places. The rules now ride inside the sealed sync files,
+  stamped with when they were last changed by hand; the newest wins. (The
+  numbers already used need none of this: they are on the records.)
+*/
+const NUMBERING_AT_KEY = 'numberingSettingsAt';
+
+function numberingAt() {
+  try { return localStorage.getItem(NUMBERING_AT_KEY) || ''; } catch (e) { return ''; }
+}
+
+function stampNumbering() {
+  try { localStorage.setItem(NUMBERING_AT_KEY, new Date().toISOString()); } catch (e) {}
+}
+
+/* every hand-made change to a numbering rule goes out to the other computers */
+function numberingChanged() {
+  stampNumbering();
+  markLocalChange();
+}
+
+function numberingForSync() {
+  return {
+    at: numberingAt(),
+    waridaAuto: waridaAuto, outnumAuto: outnumAuto,
+    seqSettings: seqSettings, secretNums: secretNums
+  };
+}
+
+function mergeRemoteNumbering(remote) {
+  const n = remote && remote.numbering;
+  if (!n || typeof n.at !== 'string' || !n.at) return false;
+  if (n.at <= numberingAt()) return false;
+  const before = JSON.stringify([waridaAuto, outnumAuto, seqSettings, secretNums]);
+  const take = (mine, theirs) => {
+    if (theirs && typeof theirs === 'object' && !Array.isArray(theirs)) Object.assign(mine, theirs);
+  };
+  take(waridaAuto, n.waridaAuto); saveWaridaAuto();
+  take(outnumAuto, n.outnumAuto); saveOutnumAuto();
+  take(seqSettings, n.seqSettings); saveSeqSettings();
+  take(secretNums, n.secretNums); saveSecretNums();
+  try { localStorage.setItem(NUMBERING_AT_KEY, n.at); } catch (e) {}
+  applyYearlyReset();          // rules from last year roll over here, too
+  return before !== JSON.stringify([waridaAuto, outnumAuto, seqSettings, secretNums]);
+}
+
+/*
+  ── Two computers, one number ───────────────────────────────────────────
+  A number is offered when a form opens, from what this computer knows at
+  that moment. Another computer may hand out the same number while the form
+  is being filled in. So right before a new number is made final, the
+  newest files of the other computers are read once more (a few seconds at
+  most), and a number taken in the meantime is replaced by the next free
+  one — and the person is told, so the paper carries the right number.
+*/
+async function catchUpBeforeNumbering() {
+  if (!syncSettings.enabled || !syncDirHandle) return;
+  const until = Date.now() + 8000;
+  while (syncBusy && Date.now() < until) await new Promise(r => setTimeout(r, 120));
+  if (syncBusy) return;
+  // the phone keeps the MEGA folder list for a while; this number needs today's
+  try { if (window.daxilWeb && typeof window.daxilWeb.lookAfresh === 'function') window.daxilWeb.lookAfresh(); } catch (e) {}
+  await Promise.race([
+    syncNow(true).catch(() => {}),
+    new Promise(r => setTimeout(r, Math.max(800, until - Date.now())))
+  ]);
+}
+
+/* remembers the number a form offered, so a save can tell whether it is still that one */
+function markOffered(fieldId, isNew) {
+  const el = document.getElementById(fieldId);
+  if (el) el.dataset.offered = isNew ? el.value : '';
+}
+
+function forgetOffered(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (el) delete el.dataset.offered;
+}
+
+function wasOffered(el, value) {
+  return !!value && (sameNumber(value, el.dataset.offered || '') || sameNumber(value, el.dataset.suggestion || ''));
+}
+
+function tellNumbersMoved(moves) {
+  if (!moves.length) return;
+  alert('ئاگاداری: کاتێک ئەم فۆڕمە کراوە بوو، کۆمپیوتەرێکی تر هەمان ژمارەی بەکارهێنا.\n\n' +
+    moves.map(m => m.label + ' «' + m.from + '» گۆڕدرا بۆ «' + m.to + '».').join('\n') +
+    '\n\nتکایە ژمارە نوێیەکە لەسەر نووسراوەکە بنووسە.');
+}
+
+/* is this زنجیرە number already on a letter of this year? */
+function seqInUse(n) {
+  const year = currentYearStr();
+  const hit = v => parseInt(toLatinDigits(v), 10) === n;
+  return books.some(b => (bookYear(b) === year && hit(b.seq)) ||
+      (b.followUps || []).some(f => followUpYear(f) === year && hit(f.seq))) ||
+    (secretBooks || []).some(b => (b.followUps || []).some(f => followUpYear(f) === year && hit(f.seq)));
+}
+
+function secretOutnumTaken(outnum) {
+  const year = currentYearStr();
+  return (secretBooks || []).some(b => (secretYear(b) === year && sameNumber(b.outnum, outnum)) ||
+    (b.followUps || []).some(f => followUpYear(f) === year && sameNumber(f.outnum, outnum)));
+}
+
+/*
+  ── ژمارەی دووبارە ──────────────────────────────────────────────────────
+  Even with that last look, two computers that save in the same few seconds
+  — or one that worked without internet — can give one number to two
+  letters, because each knows only what has reached it. When both records
+  meet, the pair is shown here to whoever looks after the numbering. Nothing
+  is renumbered by itself: the number may already be written on the paper.
+*/
+const DUP_IGNORED_KEY = 'dupNumbersIgnored';
+let dupIgnoredCache = null;
+let lastDupNoticeHtml = '';
+
+function dupIgnored() {
+  if (dupIgnoredCache) return dupIgnoredCache;
+  try {
+    const v = JSON.parse(localStorage.getItem(DUP_IGNORED_KEY) || '[]');
+    dupIgnoredCache = Array.isArray(v) ? v : [];
+  } catch (e) { dupIgnoredCache = []; }
+  return dupIgnoredCache;
+}
+
+function canFixNumbers() {
+  return isSuperAdmin() || can('numbering');
+}
+
+function duplicateNumberGroups() {
+  if (!currentAccount || !canFixNumbers()) return [];
+  const year = currentYearStr();
+  const ignored = new Set(dupIgnored());
+  const groups = [];
+  const norm = v => toLatinDigits(String(v || '')).trim().replace(/^0+(?=\d)/, '');
+  const scan = (team, field, list, yearOf, yearly) => {
+    const byNum = new Map();
+    const add = (rec, fu, value, y, when) => {
+      const n = norm(value);
+      if (!n) return;
+      const k = (yearly ? y + '/' : '') + n;
+      if (!byNum.has(k)) byNum.set(k, []);
+      byNum.get(k).push({ id: rec.id, fu: fu, number: n, year: y, when: when || '', rec: rec });
+    };
+    list.forEach(b => {
+      if (!b || !b.id) return;
+      add(b, -1, b[field], yearOf(b), b.createdAt || b.updatedAt || '');
+      // a دوا بە دوای نووسراومان carries a real outgoing number of its own
+      if (field === 'outnum') (b.followUps || []).forEach((f, i) => add(b, i, f.outnum, followUpYear(f), f.at || ''));
+    });
+    byNum.forEach(entries => {
+      if (entries.length < 2) return;
+      if (!entries.some(e => e.year === year)) return;      // this year's registers only
+      entries.sort((a, b) => String(a.when).localeCompare(String(b.when)));
+      const key = team + '|' + field + '|' + entries[0].number + '|' +
+        entries.map(e => e.id + (e.fu > -1 ? '#' + e.fu : '')).sort().join(',');
+      if (ignored.has(key)) return;
+      groups.push({ team: team, field: field, number: entries[0].number, entries: entries, key: key });
+    });
+  };
+  scan(1, 'warida', books, bookYear, waridaAuto.yearly !== false);
+  scan(1, 'outnum', books, bookYear, outnumAuto.yearly !== false);
+  if (isSuperAdmin() || can('secret')) {
+    scan(2, 'warida', secretBooks || [], secretYear, true);
+    scan(2, 'outnum', secretBooks || [], secretYear, true);
+  }
+  return groups;
+}
+
+function dupGroupTitle(g) {
+  return 'تیمی ' + (g.team === 2 ? '٢' : '١') + ' \u2014 ژمارەی ' +
+    (g.field === 'warida' ? 'واریدە' : 'دەرچوو') + ' ' + g.number;
+}
+
+function renderDupNotice() {
+  const box = document.getElementById('dupNotice');
+  const body = document.getElementById('dupNoticeBody');
+  if (!box || !body) return;
+  let groups = [];
+  try { groups = duplicateNumberGroups(); } catch (e) { groups = []; }
+  if (!groups.length) {
+    box.classList.remove('show');
+    return;
+  }
+  const html = '<span class="sn-title">\u26A0 ژمارەی دووبارە</span>' +
+    'ئەم ژمارانە بە دوو نووسراو یان زیاتر دراون: ' +
+    groups.slice(0, 6).map(g => '<b>' + escapeHtml(dupGroupTitle(g)) + '</b>').join('، ') +
+    (groups.length > 6 ? ' ...' : '') +
+    '<br><button type="button" class="small sn-fix" id="dupNoticeBtn">پیشاندان و چارەسەرکردن</button>';
+  if (html !== lastDupNoticeHtml || !document.getElementById('dupNoticeBtn')) {
+    body.innerHTML = html;
+    lastDupNoticeHtml = html;
+    document.getElementById('dupNoticeBtn').addEventListener('click', openDupWindow);
+  }
+  box.classList.add('show');
+}
+
+function openDupWindow() {
+  renderDupList();
+  document.getElementById('dupOverlay').classList.add('open');
+}
+
+function renderDupList() {
+  const host = document.getElementById('dupList');
+  if (!host) return;
+  const groups = duplicateNumberGroups();
+  if (!groups.length) {
+    host.innerHTML = '<div class="backup-ok">\u2713 هیچ ژمارەیەکی دووبارە نەماوە.</div>';
+    return;
+  }
+  host.innerHTML = groups.map((g, gi) =>
+    '<div class="dup-group">' +
+      '<h3>' + escapeHtml(dupGroupTitle(g)) + ' \u2014 ' + g.entries.length + ' نووسراو</h3>' +
+      g.entries.map((e, ei) => {
+        const b = e.rec;
+        const fu = e.fu > -1 ? (b.followUps || [])[e.fu] || {} : null;
+        const what = fu
+          ? 'دوا بە دوای نووسراومان \u2014 ' + escapeHtml(fu.subject || '\u2014')
+          : escapeHtml(b.subject || b.subjectOut || '\u2014') + (b.source ? ' \u2014 ' + escapeHtml(b.source) : '');
+        let when = '';
+        try { when = e.when ? new Date(e.when).toLocaleString('en-GB') : ''; } catch (x) { when = ''; }
+        const who = fu ? (fu.by || '') : (b.updatedBy || '');
+        return '<div class="dup-row">' +
+          '<span class="dup-what">' + what + '<br><span style="color:var(--ink-soft);">' +
+            escapeHtml(when) + (who ? ' \u2014 ' + escapeHtml(who) : '') + '</span></span>' +
+          (ei === 0
+            ? '<span class="dup-keep">ژمارەکەی خۆی دەمێنێت</span>'
+            : '<button type="button" class="small btn-save" data-dup-fix="' + gi + ':' + ei + '">ژمارەی نوێ بدە</button>') +
+        '</div>';
+      }).join('') +
+      '<div style="margin-top:6px;"><button type="button" class="small ghost" data-dup-ignore="' + gi + '">' +
+        'پشتگوێخستن (بە ئەنقەست وایە)</button></div>' +
+    '</div>').join('');
+  host.querySelectorAll('[data-dup-fix]').forEach(btn => btn.addEventListener('click', () => {
+    const parts = btn.dataset.dupFix.split(':').map(Number);
+    const g = groups[parts[0]];
+    if (g) fixDuplicateNumber(g, g.entries[parts[1]]);
+  }));
+  host.querySelectorAll('[data-dup-ignore]').forEach(btn => btn.addEventListener('click', () => {
+    const g = groups[Number(btn.dataset.dupIgnore)];
+    if (!g) return;
+    const list = dupIgnored().concat([g.key]).slice(-300);
+    dupIgnoredCache = list;
+    try { localStorage.setItem(DUP_IGNORED_KEY, JSON.stringify(list)); } catch (e) {}
+    renderDupList();
+    renderDupNotice();
+  }));
+}
+
+/* gives one of the letters the next free number of the same register */
+async function fixDuplicateNumber(g, e) {
+  if (!canFixNumbers() || !g || !e) return;
+  const team = g.team;
+  const b = (team === 2 ? secretBooks : books).find(x => x.id === e.id);   // the live copy
+  if (!b) return;
+  let fresh;
+  if (g.field === 'warida') fresh = team === 2 ? nextSecretNumber('warida') : nextWaridaNumber();
+  else fresh = team === 2 ? nextSecretNumber('outnum') : nextOutnumNumber();
+  if (!confirm('ژمارەی ' + (g.field === 'warida' ? 'واریدە' : 'دەرچوو') + 'ی ئەم نووسراوە «' + e.number +
+      '» دەگۆڕدرێت بۆ «' + fresh + '».\n\nدوای ئەوە ژمارە نوێیەکە لەسەر کاغەزەکەش بنووسە. بەردەوام بم؟')) return;
+  const old = JSON.parse(JSON.stringify(b));
+  if (e.fu > -1) {
+    if (!b.followUps || !b.followUps[e.fu]) return;
+    b.followUps[e.fu].outnum = fresh;
+  } else {
+    b[g.field] = fresh;
+  }
+  b.updatedAt = new Date().toISOString();
+  b.updatedBy = actorLabel();
+  if (team === 2) {
+    await saveSecretBook(b);
+  } else {
+    await logEdit(old, b);
+    await saveOneBook(b);
+  }
+  markLocalChange(b);
+  render();
+  if (team === 2 && document.getElementById('secretView').style.display === 'block') renderSecret();
+  renderDupList();
+  showOkToast('\u2714 ژمارەی نوێ: ' + fresh);
+}
+
+document.getElementById('closeDupBtn').addEventListener('click', () =>
+  document.getElementById('dupOverlay').classList.remove('open'));
+document.getElementById('dupOverlay').addEventListener('dblclick', e => {
+  if (backdropClicked(e, 'dupOverlay')) document.getElementById('dupOverlay').classList.remove('open');
+});
+
+/*
   A deleted list entry used to reappear within seconds. Three things re-added it:
   saving a record that still used the name, importing data, and the folder sync
   pulling the other PC's copy of the list. So a deletion has to be remembered,
@@ -4264,6 +5025,15 @@ function scheduledAnchor(ref) {
   put, so it simply becomes due on the next day the system IS opened —
   however many days or weeks later that is.
 */
+/*
+  The phone and tablet app reaches MEGA directly. The computers keep the
+  office's copies and backups; the phone sends only what was done on it, so a
+  phone that only looks writes nothing to MEGA at all.
+*/
+function isPhoneApp() {
+  return !!(window.daxilWeb && window.daxilWeb.isWeb);
+}
+
 function isBackupDue() {
   /*
     This used to nag from a per-machine "last manual download" date, so every
@@ -4273,6 +5043,7 @@ function isBackupDue() {
     only to someone allowed to back up.
   */
   if (!canFullBackup()) return false;
+  if (isPhoneApp()) return false;          // the computers keep the backups
   const today = localISO(new Date());
   try {
     if ((localStorage.getItem('lastFolderBackup') || '') === today) return false;
@@ -4286,29 +5057,6 @@ function daysOverdue() {
   const today = new Date();
   const t0 = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   return Math.max(0, Math.round((t0 - anchor) / 86400000));
-}
-
-async function buildBackupPayload() {
-  const stamp = localISO(new Date());
-  // the weekly backup carries everything, not just the records
-  const json = JSON.stringify(await buildFullBackup(), null, 2);
-  let xlsxArr = null;
-  try {
-    if (typeof XLSX !== 'undefined') {
-      xlsxArr = XLSX.write(buildWorkbook(), { bookType: 'xlsx', type: 'array' });
-    }
-  } catch (e) { xlsxArr = null; }
-  const pending = books.filter(isOutstanding).length;
-  return {
-    stamp,
-    json,
-    xlsxArr,
-    jsonName: 'daxil-backup-' + stamp + '.json',
-    xlsxName: 'daxil-backup-' + stamp + '.xlsx',
-    total: books.length,
-    pending,
-    done: books.length - pending
-  };
 }
 
 function downloadBlob(blob, filename) {
@@ -4345,52 +5093,15 @@ function markBackupDone() {
   renderBackupDot();
 }
 
-/*
-  Each file gets its own button: browsers block a page that fires
-  several downloads at once. The week counts as backed up once both
-  files have actually been saved.
-*/
-function downloadBothBackupFiles(p) {
-  downloadBlob(new Blob([p.json], { type: 'application/json' }), p.jsonName);
-  if (p.xlsxArr) {
-    setTimeout(() => {
-      downloadBlob(new Blob([p.xlsxArr], { type: 'application/octet-stream' }), p.xlsxName);
-    }, 700);
-  }
-  markBackupDone();
-
-  const el = document.getElementById('backupResult');
-  if (!el) return;
-
-  el.innerHTML =
-    '<div class="backup-ok"><b>\u2713 باکئەپی ئەم هەفتەیە تەواو بوو</b><br>' +
-    'هەردوو فایل بۆ فۆڵدەری <b>Downloads</b> دابەزێنران:<br>' +
-    '&nbsp;&nbsp;\u2022 ' + escapeHtml(p.jsonName) + '<br>' +
-    (p.xlsxArr ? '&nbsp;&nbsp;\u2022 ' + escapeHtml(p.xlsxName) + '<br>' : '') +
-    'تکایە کۆپییان بکە بۆ شوێنێکی پارێزراو (Dropbox، USB، یان ئیمەیڵ).</div>' +
-    '<div class="backup-note">ئەگەر وێبگەڕەکەت داوای ڕێپێدانی کرد بۆ داگرتنی چەند فایلێک، ' +
-    '«Allow» هەڵبژێرە. ئەگەر تەنها یەک فایل دابەزی، لێرەوە بە جیا دایبەزێنە:<br>' +
-    '<button type="button" class="small ghost" id="dlJsonOnly">JSON</button> ' +
-    (p.xlsxArr ? '<button type="button" class="small ghost" id="dlXlsxOnly">ئێکسڵ</button>' : '') +
-    '</div>';
-
-  document.getElementById('dlJsonOnly').addEventListener('click', () => {
-    downloadBlob(new Blob([p.json], { type: 'application/json' }), p.jsonName);
-  });
-  const x = document.getElementById('dlXlsxOnly');
-  if (x) x.addEventListener('click', () => {
-    downloadBlob(new Blob([p.xlsxArr], { type: 'application/octet-stream' }), p.xlsxName);
-  });
-}
-
 function renderBackupSteps() {
   const el = document.getElementById('backupResult');
   if (!el) return;
 
   el.innerHTML =
     '<div class="backup-dl-wrap">' +
-    '<button type="button" id="dlBothBtn" class="dl-both">داگرتنی باکئەپ (JSON + ئێکسڵ)</button>' +
-    '<div class="backup-note">بە یەک کرتە هەردوو فایلەکە دادەبەزێن. ' +
+    '<button type="button" id="dlBothBtn" class="dl-both">باکئەپی تەواوی سیستەم</button>' +
+    '<div class="backup-note">بە یەک کرتە هەموو شتێک دادەبەزێت: نووسراوەکانی تیمی ١ و تیمی ٢، بەکارهێنەران، ' +
+    'ژمارەی واریدە و ژمارەی دەرچووی هەردوو تیم، لیستەکان و سڕاوەکان. ' +
     'فایلی JSON بۆ گەڕاندنەوەی داتایە بۆ ناو سیستەم، فایلی ئێکسڵ بۆ خوێندنەوەیە.</div>' +
     '</div>';
 
@@ -4400,7 +5111,10 @@ function renderBackupSteps() {
     const label = btn.textContent;
     btn.textContent = 'ئامادەکردن...';
     try {
-      downloadBothBackupFiles(await buildBackupPayload());
+      await runFullBackup(el);
+    } catch (e) {
+      console.error(e);
+      alert('باکئەپ دانەبەزی: ' + (e && e.message ? e.message : ''));
     } finally {
       btn.disabled = false;
       btn.textContent = label;
@@ -5706,6 +6420,7 @@ document.getElementById('saveOutnumBtn').addEventListener('click', () => {
   outnumAuto.yearly = document.getElementById('outnumYearly').checked;
   outnumAuto.start = st;
   saveOutnumAuto();
+  numberingChanged();
   renderOutnumSettings();
   refreshOutnumSuggestion();
   alert('ڕێکخستنەکان پاشەکەوتکران.');
@@ -5717,6 +6432,7 @@ document.getElementById('saveOutnumBtn').addEventListener('click', () => {
     if (id === 'outnumEnabled') outnumAuto.enabled = this.checked;
     else outnumAuto.yearly = this.checked;
     saveOutnumAuto();
+    numberingChanged();
     renderOutnumSettings();
     refreshOutnumSuggestion();
   });
@@ -5752,6 +6468,7 @@ document.getElementById('saveSeqBtn').addEventListener('click', () => {
   if (isNaN(v) || v < 1) { alert('ژمارەی دەستپێک دەبێت لە ١ گەورەتر بێت.'); return; }
   seqSettings.start = v;
   saveSeqSettings();
+  numberingChanged();
   renderSeqSettings();
   alert('ڕێکخستنەکان پاشەکەوتکران.');
 });
@@ -5792,6 +6509,7 @@ document.getElementById('saveSecNums2Btn').addEventListener('click', () => {
   secretNums.inStart = a;
   secretNums.outStart = b;
   saveSecretNums();
+  numberingChanged();
   renderSecretNumSettings2();
   alert('ژمارەکانی تیمی ٢ پاشەکەوتکران.');
 });
@@ -5810,14 +6528,25 @@ async function freshStart() {
       'بەکارهێنەران، بەڕێوەبەرایەتییەکان، شوێنەکان و بابەتەکان دەمێننەوە.\n\n' +
       'بەردەوام بیت؟')) return;
 
-  if (confirm('یەکەم جار باکئەپێک دابەزێنرێت؟\n\nپێشنیاری توندی دەکرێت.')) {
-    try {
-      downloadBlob(await fullBackupBlob(), 'daxil-BEFORE-RESET-' + localISO(new Date()) + '.json');
-      await new Promise(r => setTimeout(r, 1500));
-    } catch (e) { console.error('Backup before reset failed', e); }
-  }
-
+  // without the delete password nothing can be cleared, so it is checked before any download
   if (!deletePasswordIsSet()) { alert(DELETE_PASS_UNSET); return; }
+
+  /*
+    Before anything is cleared, everything is downloaded — always, not on
+    request: the full backup (both teams, accounts, lists, settings, history,
+    the bin), the records as an Excel workbook, and the accounts on their own.
+  */
+  let saved = [];
+  try { saved = await downloadEverything('BEFORE-RESET'); }
+  catch (e) { console.error('Backup before reset failed', e); }
+  if (!saved.length) {
+    alert('باکئەپ دروست نەکرا — هیچ نەسڕدرایەوە.');
+    return;
+  }
+  if (!confirm('ئەم پەڕگانە دابەزێنران:\n\n' + saved.map(n => '\u2022 ' + n).join('\n') +
+      '\n\nدڵنیابە هەموویان پاشەکەوت کراون (بە زۆری لە فۆڵدەری Downloads).\n\n' +
+      'بەردەوام بیت بۆ سڕینەوە؟')) return;
+
   const typed = prompt('وشەی نهێنی سڕینەوە بنووسە بۆ پشتڕاستکردنەوە:');
   if (typed === null) return;
   if (!(await deletePasswordIs(typed))) { alert('وشەی نهێنی هەڵەیە. هیچ نەسڕدرایەوە.'); return; }
@@ -5850,7 +6579,8 @@ async function freshStart() {
           'ژمارەکان لە سەرەتاوە دەستپێدەکەنەوە.\n\n' +
           'دوایین دوو هەنگاو:\n' +
           '١. هەمان کار لەسەر هەموو کۆمپیوتەرەکانی تر بکە.\n' +
-          '٢. فایلەکانی daxil-sync-*.json لە فۆڵدەری MEGA بسڕەوە.');
+          '٢. فایلەکانی daxil-sync-*.json لە فۆڵدەری MEGA بسڕەوە.\n\n' +
+          'بۆ گەڕاندنەوەی داتاکان: ڕێکخستنەکان \u2190 «گەڕاندنەوەی داتای سڕاوە».');
   } catch (e) {
     console.error('Reset failed', e);
     alert('هەڵەیەک ڕوویدا: ' + (e && e.message ? e.message : e));
@@ -5858,6 +6588,17 @@ async function freshStart() {
 }
 
 document.getElementById('freshStartBtn').addEventListener('click', freshStart);
+
+/* bringing removed data back: the same import as the backup window, reached from beside the reset */
+document.getElementById('restoreFileBtn').addEventListener('click', () => {
+  if (!isSuperAdmin()) return;
+  document.getElementById('importFile').click();
+});
+document.getElementById('restoreFolderBtn').addEventListener('click', () => {
+  if (!isSuperAdmin()) return;
+  document.getElementById('settingsOverlay').classList.remove('open');
+  openBackupModal();
+});
 
 async function renderBackupStatus() {
   const box = document.getElementById('folderBackupStatus');
@@ -5954,6 +6695,10 @@ document.getElementById('makeSnapshotBtn').addEventListener('click', async () =>
 
 function openSettingsModal() {
   if (!isSuperAdmin()) return;
+  const fbw = document.getElementById('fullBackupWrap');
+  if (fbw) fbw.style.display = canFullBackup() ? 'block' : 'none';
+  const fbr = document.getElementById('fullBackupResult');
+  if (fbr) fbr.innerHTML = '';
   renderBackupStatus();
   renderSnapshotList();
   renderSecretNumSettings2();
@@ -6025,6 +6770,7 @@ document.getElementById('saveWaridaBtn').addEventListener('click', () => {
   waridaAuto.yearly = document.getElementById('waridaYearly').checked;
   waridaAuto.start = st;
   saveWaridaAuto();
+  numberingChanged();
   renderWaridaSettings();
   alert('ڕێکخستنەکان پاشەکەوتکران.');
 });
@@ -6033,6 +6779,7 @@ document.getElementById('waridaEnabled').addEventListener('change', function () 
   if (!isSuperAdmin()) return;
   waridaAuto.enabled = this.checked;
   saveWaridaAuto();
+  numberingChanged();
   renderWaridaSettings();
 });
 
@@ -6040,6 +6787,7 @@ document.getElementById('waridaYearly').addEventListener('change', function () {
   if (!isSuperAdmin()) return;
   waridaAuto.yearly = this.checked;
   saveWaridaAuto();
+  numberingChanged();
   renderWaridaSettings();
 });
 
@@ -6127,6 +6875,8 @@ const PERM_DEFS = [
   { key: 'infoOnly', label: 'نیشانەکردنی نووسراو وەک «تەنها بۆ زانیاری»' },
   { key: 'accept', label: 'وەرگرتن یان ڕەتکردنەوەی نووسراوی گوازراوە' },
   { key: 'transfers', label: 'بینینی لیستی نووسراوە چاوەڕوانەکان' },
+  { key: 'formTransfer', label: 'گواستنەوە لە ناو نووسراو' },
+  { key: 'waridaSearch', label: 'گەڕان بە ژمارەی واریدە (خانەی گەڕانی تایبەت)' },
   { key: 'oversight', label: 'چاودێری بەڕێوەبەرایەتییەکانی تر (کرتە لەسەر ژمارەکان)' },
   { key: 'secret', label: 'دەستگەیشتن بە نووسراوە نهێنیەکان' },
   { key: 'secretExport', label: 'داگرتنی ئێکسڵی نووسراوە نهێنیەکان' },
@@ -7258,7 +8008,16 @@ function dbCountActivity() {
 
 async function initActivityLog() {
   try {
-    const all = await dbGetAllActivity();
+    let all = await dbGetAllActivity();
+    // keys written before 2.92 carried the letter's subject readable on the disk: renewed once
+    const plainKeys = all.filter(e => e && e.k && opaqueActivityKey(e.k) !== e.k);
+    if (plainKeys.length) {
+      try {
+        await dbDeleteActivityKeys(plainKeys.map(e => e.k));
+        await dbPutActivity(plainKeys.map(e => ({ ...e, k: opaqueActivityKey(e.k) })));
+        all = await dbGetAllActivity();
+      } catch (e) { console.error('Activity keys could not be renewed', e); }
+    }
     all.sort((a, b) => String(b.time).localeCompare(String(a.time)));
     activityLog = all.slice(0, ACTIVITY_VIEW_LIMIT);
 
@@ -7341,7 +8100,7 @@ async function clearActivityLog(olderThanDays) {
 function addActivityEntries(entries) {
   const stamped = entries
     .filter(e => e && e.time)
-    .map(e => (e.k ? e : { ...e, k: activityKey(e) }));
+    .map(e => ({ ...e, k: e.k ? opaqueActivityKey(e.k) : activityKey(e) }));
   if (!stamped.length) return 0;
 
   const seen = new Set(activityLog.map(e => e.k));
@@ -7360,7 +8119,31 @@ function writeActivityLog(log) {
 
 /* time + actor + record identify an entry well enough to avoid duplicates */
 function activityKey(entry) {
-  return (entry.time || '') + '|' + (entry.actor || '') + '|' + (entry.label || '');
+  return opaqueActivityKey((entry.time || '') + '|' + (entry.actor || '') + '|' + (entry.label || ''));
+}
+
+/*
+  The key is kept on the disk as it is — only the entry itself is sealed — so
+  it must carry no readable words. It keeps the time, for order, and a short
+  fingerprint of who and what: the same on every computer for the same entry,
+  so duplicates still collapse. A key made by an older version is turned into
+  this form wherever it arrives.
+*/
+function opaqueActivityKey(k) {
+  k = String(k || '');
+  if (/^[^|]*\|#[0-9a-f]{16}$/.test(k)) return k;
+  const cut = k.indexOf('|');
+  const time = cut < 0 ? k : k.slice(0, cut);
+  const rest = cut < 0 ? '' : k.slice(cut + 1);
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < rest.length; i++) {
+    const ch = rest.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return time + '|#' + (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
 }
 
 function mergeActivityLog(incoming) {
@@ -7497,6 +8280,7 @@ function showApp(role, username) {
   document.querySelectorAll('.export-only').forEach(el => {
     el.style.display = can('export') ? 'inline-block' : 'none';
   });
+  applyWaridaSearchAccess();
   document.getElementById('addBtn').style.display =
     (can('add') && !reasonOnlyMode()) ? 'inline-block' : 'none';
   document.getElementById('addOutBtn').style.display =
@@ -7922,6 +8706,7 @@ function describeActiveFilters(skipStatus) {
   const statusFilter = skipStatus ? '' : document.getElementById('filterStatus').value;
   const from = getDateISO('filterFrom');
   const to = getDateISO('filterTo');
+  { const wq = waridaSearchValue(); if (wq) parts.push('ژمارەی واریدە: ' + wq); }
   if (search) parts.push('گەڕان: "' + search + '"');
   if (reasonFilter) parts.push('هۆبە: ' + reasonFilter);
   if (statusFilter) parts.push('دۆخ: ' + statusLabel(statusFilter));
@@ -9619,7 +10404,8 @@ async function writeMyDeltaFile() {
     brand: brandSettings,
     deleteNotices: deleteNotices,
     deleteNoticesDismissed: deleteNoticesDismissed,
-    security: securityForSync()
+    security: securityForSync(),
+    numbering: numberingForSync()
   });
   return recentBooks.length + recentSecret.length;
 }
@@ -9652,7 +10438,8 @@ async function writeMySyncFile() {
     brand: brandSettings,
     deleteNotices: deleteNotices,
     deleteNoticesDismissed: deleteNoticesDismissed,
-    security: securityForSync()
+    security: securityForSync(),
+    numbering: numberingForSync()
   });
 }
 
@@ -9725,13 +10512,16 @@ async function syncNow(quiet) {
       if (mergeActivityLog(r.activityLog)) changes++;
       // accounts, taken only from sealed files
       if (mergeRemoteUsers(r)) changes++;
+      // the numbering rules, newest first — like accounts, only from a sealed file
+      if (r.__sealed && mergeRemoteNumbering(r)) changes++;
     });
 
     changes += changesFromDeletes;
     if (changes > 0) {
       healMissingSeq();
       await saveBooks();
-      localDirty = true;
+      // a computer passes on everything it has (the safety net); the phone app only what was done on it
+      if (!isPhoneApp()) localDirty = true;
       render();
       // records that arrived from other machines belong in the live Excel too
       writeLiveExcel();
@@ -9954,6 +10744,10 @@ function renderSyncModal() {
   } else {
     box.className = 'backup-status-box';
     html += 'دوایین هاوکاتکردن: <b>' + timeAgoKu(lastSyncAt) + '</b><br>';
+    // while sync is running the folder can still be changed (the browser used to offer it only
+    // after every restart, when it asked for permission again; the application never does)
+    actions.innerHTML = '<button type="button" id="syncNowBtn">ئێستا هاوکات بکە</button>' +
+      '<button type="button" class="ghost" id="pickSyncFolderBtn">گۆڕینی فۆڵدەر</button>';
     if (netOffline) {
       html += '<br><b style="color:#b45309;">' + netOfflineText() + '</b>';
     }
@@ -10277,6 +11071,7 @@ async function restoreSnapshot(key) {
     if (dd.outnumAuto) { outnumAuto = Object.assign(outnumAuto, dd.outnumAuto); saveOutnumAuto(); }
     if (dd.seqSettings) { seqSettings = Object.assign(seqSettings, dd.seqSettings); saveSeqSettings(); }
     if (dd.secretNums) { secretNums = Object.assign(secretNums, dd.secretNums); saveSecretNums(); }
+    if (dd.waridaAuto || dd.outnumAuto || dd.seqSettings || dd.secretNums) stampNumbering();
     if (Array.isArray(dd.activityLog) && dd.activityLog.length) mergeActivityLog(dd.activityLog);
 
     fillReasonDropdowns();
@@ -10340,6 +11135,8 @@ async function writeDailyBackup(force) {
   const finish = r => { lastBackupResult = r; renderBackupDot(); return r; };
   // a full copy of both teams: written only by accounts allowed to hold one
   if (!canFullBackup()) return { ok: false, why: 'no-perm' };
+  // the computers write the hourly backups; a phone only when asked by hand
+  if (isPhoneApp() && !force) return { ok: false, why: 'phone' };
   if (!syncDirHandle) return finish({ ok: false, why: 'no-folder' });
   // a backup in the shared folder is sealed like everything else there
   if (!officeKeyOk || !vaultReady()) return finish({ ok: false, why: 'no-key' });
@@ -11287,8 +12084,28 @@ function formatDate(iso) {
   return d + '/' + m + '/' + y;
 }
 
+function canWaridaSearch() {
+  return isSuperAdmin() || can('waridaSearch');
+}
+
+/* the search by ژمارەی واریدە alone is given to an account by the super admin */
+function applyWaridaSearchAccess() {
+  const ws = document.getElementById('waridaSearchWrap');
+  if (!ws) return;
+  const on = canWaridaSearch();
+  ws.style.display = on ? '' : 'none';
+  if (!on) document.getElementById('searchWarida').value = '';
+}
+
+/* the number typed in the ژمارەی واریدە search box, when this account may use it */
+function waridaSearchValue() {
+  const el = document.getElementById('searchWarida');
+  return (el && canWaridaSearch()) ? toLatinDigits(el.value).trim() : '';
+}
+
 function getFilteredBooks(ignoreStatus) {
   const search = document.getElementById('search').value.trim().toLowerCase();
+  const waridaQ = waridaSearchValue();
   const reasonFilter = document.getElementById('filterReason').value;
   const statusFilter = ignoreStatus ? '' : document.getElementById('filterStatus').value;
   const from = getDateISO('filterFrom');
@@ -11296,6 +12113,8 @@ function getFilteredBooks(ignoreStatus) {
 
   let shown = allBooksForView().filter(b => {
     const matchesSearch = !search || searchHaystack(b).includes(search);
+    // the exact number only: 45 finds 45 (or 045), never 145 or 450
+    if (waridaQ && !sameNumber(b.warida, waridaQ)) return false;
     const matchesReason = !reasonFilter || b.reason === reasonFilter;
     const matchesStatus = !statusFilter || displayStatus(b) === statusFilter;
     const entryOf = bookEntryDate(b);
@@ -11597,6 +12416,16 @@ async function assignEmployee(id, employeeName) {
   render();
 }
 
+/* on a record card: where the director sent it — amber while the receiving side has not accepted yet */
+function referralCellHTML(b) {
+  const pending = isAwaiting(b) && pendingToOf(b);
+  if (pending) {
+    return '<span class="col-val" style="color:#B45309; font-weight:700;">' +
+      escapeHtml(pending) + ' — چاوەڕوانی وەرگرتن</span>';
+  }
+  return '<span class="col-val">' + escapeHtml(deptForPrint(b) || '—') + '</span>';
+}
+
 function render() {
   renderClockWarning();
   renderClockLock();
@@ -11607,6 +12436,7 @@ function render() {
   renderRejectBanner();
   renderDashboard();
   renderEmployeeDatalists();
+  renderDupNotice();
   const shown = getFilteredBooks();
   // search and filters run over every record first, then the results are paged
   const totalPages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
@@ -11626,7 +12456,6 @@ function render() {
       : 'هیچ نووسراوێک بەگوێرەی گەڕان و فلتەرەکان نەدۆزرایەوە.';
   } else {
     empty.style.display = 'none';
-    const isSupervisorView = canAssignEmployee();
     list.innerHTML = pageItems.map(b => `
       <div class="row status-${displayStatus(b)}">
         <div class="row-top">
@@ -11692,26 +12521,20 @@ function render() {
               <span class="col-val">${formatDate(b.dateIn)}</span>
             </div>
             <div>
+              <span class="col-label">بابەت</span>
+              <span class="col-val">${escapeHtml(b.subject || '\u2014')}</span>
+            </div>
+            <div>
               <span class="col-label">ئێستا لای</span>
               <span class="col-val">${escapeHtml(holderLabel(b))}</span>
             </div>
-            ${pendingToOf(b) && isAwaiting(b) ? `<div>
-              <span class="col-label">نێردراوە بۆ</span>
-              <span class="col-val" style="color:#B45309; font-weight:700;">${escapeHtml(pendingToOf(b))} — چاوەڕوانی وەرگرتن</span>
-            </div>` : ''}
+            <div>
+              <span class="col-label">گواستنەوەی بەڕێوەبەر بۆ</span>
+              ${referralCellHTML(b)}
+            </div>
             <div>
               <span class="col-label">ناوی وەرگر</span>
               <span class="col-val">${escapeHtml(b.name || '\u2014')}${b.mobile ? ' \u2014 ' + escapeHtml(b.mobile) : ''}</span>
-            </div>
-            <div>
-              <span class="col-label">کارمەندی ڕاسپێردراو</span>
-              ${isSupervisorView
-                ? `<input class="emp-pick" type="text" list="${empListId(b.reason)}"
-                          placeholder="ناوی کارمەند..."
-                          value="${escapeAttr(b.assignedTo || '')}"
-                          onchange="assignEmployee('${b.id}', this.value)">`
-                : `<span class="col-val">${escapeHtml(b.assignedTo || '\u2014')}</span>`
-              }
             </div>
           </div>
           <div class="sec-group sec-group-out">
@@ -11750,7 +12573,7 @@ function render() {
     const el = document.getElementById(id);
     if (el && el.parentNode) {
       el.parentNode.style.cursor = ov ? 'pointer' : '';
-      el.parentNode.title = ov ? 'کرتە بکە بۆ بینینی هەموو بەڕێوەبەرایەتییەکان' : '';
+      el.parentNode.title = ov ? 'کرتە بکە بۆ بینینی هەموو هۆبە و فەرمانبەران' : '';
     }
   });
   document.getElementById('statTotal').textContent = mine.length;
@@ -12188,6 +13011,93 @@ document.getElementById('dashToggleBtn').addEventListener('click', () => {
 let assignReasonId = null;
 
 /*
+  The director sends a record on (گواستنەوەی بەڕێوەبەر بۆ). One rule for every
+  place it can be done — this window and, for accounts allowed it, the entry
+  form: the offer is recorded, but custody does not move — the record stays
+  with whoever holds it now until the receiving side accepts. An empty choice
+  withdraws a pending offer. Returns only the fields that change.
+*/
+function directorTransferPatch(oldBook, newReason) {
+  newReason = (newReason || '').trim();
+  const changed = newReason !== (oldBook.reason || '');
+  // a rejected record must go back to 'awaiting' even if it is sent to the
+  // same department again — the paper may simply have been re-delivered
+  const wasRejected = isRejected(oldBook);
+  const currentHolder = holderOf(oldBook);
+  const patch = {};
+
+  if (newReason && (newReason !== pendingToOf(oldBook) || wasRejected || changed)) {
+    patch.holder = currentHolder;
+    patch.reason = currentHolder;      // the list still shows its real place
+    patch.pendingTo = newReason;
+    patch.transferState = 'awaiting';
+    patch.transferAt = new Date().toISOString();
+    patch.transferBy = actorLabel();
+    patch.rejectNote = '';
+    patch.rejectedBy = '';
+    const tmp = Object.assign({}, oldBook, patch, { flow: Array.isArray(oldBook.flow) ? oldBook.flow.slice() : [] });
+    recordFlow(tmp, 'transfer', currentHolder, newReason, '');
+    patch.flow = tmp.flow;
+  } else if (!newReason) {
+    patch.reason = currentHolder;
+    patch.pendingTo = '';
+    patch.transferState = currentHolder ? 'accepted' : '';
+    patch.rejectNote = '';
+  }
+  return patch;
+}
+
+/* ---------- the same, from inside the entry form ---------- */
+
+/* given by the super admin as «گواستنەوە لە ناو نووسراو» */
+function canFormTransfer() {
+  return isSuperAdmin() || (can('formTransfer') && !reasonOnlyMode());
+}
+
+/* where the director has sent this record: the pending offer, or where it now is */
+function currentReferral(b) {
+  if (!b) return '';
+  return (isAwaiting(b) && pendingToOf(b)) || holderOf(b) || '';
+}
+
+/*
+  Only names the super admin keeps in the list can be chosen — nobody can type
+  a new one here. A record already sent somewhere that has since left the list
+  still shows it, so opening the record changes nothing by itself.
+*/
+function prepareFormTransfer(b, locked) {
+  const wrap = document.getElementById('f-transfer-wrap');
+  const sel = document.getElementById('f-transfer');
+  if (!wrap || !sel) return;
+  const outOnly = document.getElementById('modalBox').classList.contains('mode-outonly');
+  const show = canFormTransfer() && !(b && b.isSecret) && !outOnly;
+  wrap.style.display = show ? '' : 'none';
+  if (!show) return;
+
+  const current = currentReferral(b);
+  const names = reasons.slice();
+  if (current && names.indexOf(current) === -1) names.unshift(current);
+  sel.innerHTML = '<option value="">— هیچ —</option>' + names.map(n =>
+    '<option value="' + escapeAttr(n) + '"' + (n === current ? ' selected' : '') + '>' + escapeHtml(n) + '</option>'
+  ).join('');
+  sel.value = current;
+  sel.dataset.was = current;
+  sel.disabled = !!locked;
+}
+
+/* the fields to change when the form is saved, or null when nothing was changed here */
+function formTransferPatch(base) {
+  const wrap = document.getElementById('f-transfer-wrap');
+  const sel = document.getElementById('f-transfer');
+  if (!wrap || !sel || wrap.style.display === 'none' || sel.disabled || !canFormTransfer()) return null;
+  const chosen = (sel.value || '').trim();
+  if (chosen === (sel.dataset.was || '')) return null;
+  // the list is the only source: anything else is ignored
+  if (chosen && reasons.indexOf(chosen) === -1) return null;
+  return directorTransferPatch(base, chosen);
+}
+
+/*
   The department list is drawn in full rather than in a dropdown, because a
   dropdown inside a scrolling dialog gets clipped and this user does nothing
   else all day.
@@ -12338,38 +13248,10 @@ document.getElementById('assignReasonSaveBtn').addEventListener('click', async (
 
   const oldBook = { ...books[idx] };
   const newReason = (document.getElementById('ar-reason').value || '').trim();
-  const changed = newReason !== (oldBook.reason || '');
-  // a rejected record must go back to 'awaiting' even if it is sent to the
-  // same department again — the paper may simply have been re-delivered
-  const wasRejected = isRejected(oldBook);
-
-  const currentHolder = holderOf(oldBook);
-  const patch = {
+  const patch = Object.assign({
     updatedAt: new Date().toISOString(),
     updatedBy: actorLabel()
-  };
-  if (newReason && (newReason !== pendingToOf(oldBook) || wasRejected || changed)) {
-    /*
-      The offer is recorded, but custody does not move: the record stays with
-      whoever holds it now until the receiving department accepts.
-    */
-    patch.holder = currentHolder;
-    patch.reason = currentHolder;      // the list still shows its real place
-    patch.pendingTo = newReason;
-    patch.transferState = 'awaiting';
-    patch.transferAt = new Date().toISOString();
-    patch.transferBy = actorLabel();
-    patch.rejectNote = '';
-    patch.rejectedBy = '';
-    const tmp = Object.assign({}, oldBook, patch);
-    recordFlow(tmp, 'transfer', currentHolder, newReason, '');
-    patch.flow = tmp.flow;
-  } else if (!newReason) {
-    patch.reason = currentHolder;
-    patch.pendingTo = '';
-    patch.transferState = currentHolder ? 'accepted' : '';
-    patch.rejectNote = '';
-  }
+  }, directorTransferPatch(oldBook, newReason));
 
   books[idx] = Object.assign({}, oldBook, patch);
   if (newReason && !reasons.includes(newReason)) { addReason(newReason); refreshPlaceSelects(); }
@@ -13058,6 +13940,7 @@ function openFollowUp(id) {
     included. Typed over freely if the office needs a different number.
   */
   document.getElementById('fu-outnum').value = nextFollowUpOutnum(team);
+  markOffered('fu-outnum', true);
   setDateISO('fu-dateout', localISO(new Date()));
   fillPlaceSelect('fu-dest', b.dest || '');       // usually the same place as before
   fillPlaceSelect('fu-subject', '');
@@ -13081,7 +13964,7 @@ async function saveFollowUp() {
   if (!canFollowUp()) return;
   const id = document.getElementById('fu-id').value;
   const team = document.getElementById('fu-team').value === '2' ? 2 : 1;
-  const outnum = toLatinDigits(document.getElementById('fu-outnum').value).trim();
+  let outnum = toLatinDigits(document.getElementById('fu-outnum').value).trim();
   const dateOut = getDateISO('fu-dateout');
   const dest = getPlaceValue('fu-dest');
   const subject = getPlaceValue('fu-subject');
@@ -13096,6 +13979,23 @@ async function saveFollowUp() {
     showErrorToast('بابەتی دوا بە دوای نووسراومان پێویستە.');
     document.getElementById('fu-subject').focus();
     return;
+  }
+
+  // the number offered when this window opened may have been taken on another computer since
+  if (outnum) {
+    await catchUpBeforeNumbering();
+    const fEl = document.getElementById('fu-outnum');
+    const usedNow = (team === 2 ? secretBooks : books).some(x => sameNumber(x.outnum, outnum) ||
+      (x.followUps || []).some(f => sameNumber(f.outnum, outnum)));
+    if (usedNow && wasOffered(fEl, outnum)) {
+      const fresh = nextFollowUpOutnum(team);
+      if (!sameNumber(fresh, outnum)) {
+        tellNumbersMoved([{ label: 'ژمارەی دەرچوو', from: outnum, to: fresh }]);
+        outnum = fresh;
+        fEl.value = fresh;
+        fEl.dataset.offered = fresh;
+      }
+    }
   }
 
   // already used? that is a different mistake, and worth its own question
@@ -14167,6 +15067,8 @@ function openSecretForm(id) {
     b ? 'دەستکاریکردنی نووسراوی نهێنی' : 'زیادکردنی نووسراوی نهێنی';
 
   document.getElementById('sec-warida').value = b ? (b.warida || '') : nextSecretNumber('warida');
+  markOffered('sec-warida', !b);
+  forgetOffered('sec-outnum');
   setDateISO('sec-date', b ? (b.date || '') : localISO(new Date()));
   fillPlaceSelect('sec-source', b ? (b.source || '') : '');
   document.getElementById('sec-sourcenum').value = b ? (b.sourceNum || '') : '';
@@ -14388,11 +15290,45 @@ async function saveSecret() {
     return;
   }
   const id = document.getElementById('sec-id').value;
-  const warida = toLatinDigits(document.getElementById('sec-warida').value).trim();
-  const outnum = toLatinDigits(document.getElementById('sec-outnum').value).trim();
+  let warida = toLatinDigits(document.getElementById('sec-warida').value).trim();
+  let outnum = toLatinDigits(document.getElementById('sec-outnum').value).trim();
   const date = getDateISO('sec-date') || localISO(new Date());
 
   const outOnly = secretMode === 'out' || (!!id && !warida && !!outnum);
+
+  // a new confidential letter, or a number given just now: one more look at the other computers
+  {
+    const prevOutS = id ? ((secretBooks.find(x => x.id === id) || {}).outnum || '') : '';
+    const newOut = !!outnum && !sameNumber(outnum, prevOutS);
+    if (!id || newOut) {
+      await catchUpBeforeNumbering();
+      const moves = [];
+      const wEl = document.getElementById('sec-warida');
+      const year = String(date).slice(0, 4);
+      if (!id && !outOnly && warida && wEl.dataset.offered && sameNumber(warida, wEl.dataset.offered) &&
+          secretBooks.some(b => secretYear(b) === year && sameNumber(b.warida, warida))) {
+        const fresh = nextSecretNumber('warida');
+        if (!sameNumber(fresh, warida)) {
+          moves.push({ label: 'ژمارەی واریدە', from: warida, to: fresh });
+          warida = fresh;
+          wEl.value = fresh;
+          wEl.dataset.offered = fresh;
+        }
+      }
+      const oEl = document.getElementById('sec-outnum');
+      if (newOut && wasOffered(oEl, outnum) && secretOutnumTaken(outnum)) {
+        const freshOut = nextSecretNumber('outnum');
+        if (!sameNumber(freshOut, outnum)) {
+          moves.push({ label: 'ژمارەی دەرچوو', from: outnum, to: freshOut });
+          outnum = freshOut;
+          oEl.value = freshOut;
+          oEl.dataset.offered = freshOut;
+          oEl.dataset.suggestion = freshOut;
+        }
+      }
+      tellNumbersMoved(moves);
+    }
+  }
 
   // an outgoing-only letter has NO واریدە — only ژمارەی صادرە
   if (!outOnly) {
@@ -14529,6 +15465,8 @@ function prepareNextSecretEntry() {
 
   // an outgoing-only letter never takes a واریدە number
   document.getElementById('sec-warida').value = outOnly ? '' : nextSecretNumber('warida');
+  markOffered('sec-warida', !outOnly);
+  forgetOffered('sec-outnum');
   setDateISO('sec-date', localISO(new Date()));
   fillPlaceSelect('sec-source', '');
   document.getElementById('sec-sourcenum').value = '';
@@ -14742,6 +15680,7 @@ document.getElementById('secOutTick').addEventListener('change', function () {
   const el = document.getElementById('sec-outnum');
   if (this.checked) {
     el.value = el.dataset.suggestion || nextSecretNumber('outnum');
+    el.dataset.offered = el.value;
     if (!getDateISO('sec-dateout')) setDateISO('sec-dateout', localISO(new Date()));
   } else {
     if (el.value.trim() === (el.dataset.suggestion || '')) el.value = '';
@@ -14773,6 +15712,7 @@ document.getElementById('secNumSaveBtn').addEventListener('click', () => {
   secretNums.inNextYearStart = (!isNaN(na) && na > 0) ? na : 1;
   secretNums.outNextYearStart = (!isNaN(nb) && nb > 0) ? nb : 1;
   saveSecretNums();
+  numberingChanged();
   document.getElementById('secretNumOverlay').classList.remove('open');
   alert('ڕێکخستنەکان پاشەکەوتکران.');
 });
@@ -14913,7 +15853,7 @@ function renderBackupDot() {
   if (!el) return;
 
   // no permission, no badge — an amber light nobody can act on only confuses
-  if (!canFullBackup()) { el.style.display = 'none'; return; }
+  if (!canFullBackup() || isPhoneApp()) { el.style.display = 'none'; return; }
   el.style.display = 'inline-block';
 
   if (!syncDirHandle) {
@@ -15141,6 +16081,7 @@ function applyOutnumSuggestion(on) {
 
   if (on) {
     el.value = el.dataset.suggestion || nextOutnumNumber();
+    el.dataset.offered = el.value;
     syncDateOutState();
     if (dateEl && !getDateISO('f-dateout')) {
       setDateISO('f-dateout', today);
@@ -15302,6 +16243,14 @@ function setModalMode(mode) {
     const el = document.getElementById(id);
     if (el) el.readOnly = lock;
   });
+  // the director's transfer belongs to the incoming half: locked with it, and absent
+  // from a letter that only goes out
+  const tr = document.getElementById('f-transfer');
+  if (tr && lock) tr.disabled = true;
+  const io = document.getElementById('f-infoonly');
+  if (io) io.disabled = lock;
+  const trWrap = document.getElementById('f-transfer-wrap');
+  if (trWrap && mode === 'outonly') trWrap.style.display = 'none';
 }
 
 function openAdd() {
@@ -15324,13 +16273,16 @@ function openAdd() {
   if (oe0) oe0.style.display = 'none';
   setDateISO('f-dateentry', localISO(new Date()));
   document.getElementById('f-warida').value = waridaAuto.enabled ? nextWaridaNumber() : '';
+  markOffered('f-warida', waridaAuto.enabled);
   fillPlaceSelect('f-source', '');
   document.getElementById('f-num').value = '';
   fillPlaceSelect('f-subject', '');
   fillPlaceSelect('f-subjectout', '');
   setDateISO('f-datein', '');
   fillPlaceSelect('f-reason', '');
+  prepareFormTransfer(null, false);
   document.getElementById('f-outnum').value = '';
+  forgetOffered('f-outnum');
   setDateISO('f-dateout', '');
   fillPlaceSelect('f-dest', '');
   document.getElementById('f-note').value = '';
@@ -15366,6 +16318,7 @@ function openAddOut() {
     here so the counter stays with real incoming letters.
   */
   document.getElementById('f-warida').value = '';
+  markOffered('f-warida', false);
   updateStatusPreview();
   const on = document.getElementById('f-outnum');
   if (on) on.focus();
@@ -15418,13 +16371,16 @@ function openEdit(id) {
   if (oe0) oe0.style.display = 'none';
   setDateISO('f-dateentry', bookEntryDate(b));
   document.getElementById('f-warida').value = b.warida || '';
+  markOffered('f-warida', false);
   fillPlaceSelect('f-source', b.source || '');
   document.getElementById('f-num').value = b.num || '';
   fillPlaceSelect('f-subject', b.subject || '');
   fillPlaceSelect('f-subjectout', b.subjectOut || '');
   setDateISO('f-datein', b.dateIn || '');
   fillPlaceSelect('f-reason', b.reason || '');
+  prepareFormTransfer(b, false);
   document.getElementById('f-outnum').value = b.outnum || '';
+  forgetOffered('f-outnum');
   setDateISO('f-dateout', b.dateOut || '');
   delete document.getElementById('f-dateout').dataset.autoFilled;
   fillPlaceSelect('f-dest', b.dest || '');
@@ -15490,7 +16446,7 @@ async function saveBook() {
   }
 
   const num = document.getElementById('f-num').value.trim();
-  const warida = toLatinDigits(document.getElementById('f-warida').value).trim().slice(0, 6);
+  let warida = toLatinDigits(document.getElementById('f-warida').value).trim().slice(0, 6);
 
   // every letter has a subject, whichever direction it travels
   const subjectVal = (formDir === 'out')
@@ -15522,6 +16478,47 @@ async function saveBook() {
       document.getElementById('f-dest').focus();
       openCombo('f-dest');
       return;
+    }
+  }
+
+  /*
+    A new letter, or an outgoing number given just now: the other computers
+    are looked at once more, and a number they took meanwhile moves on.
+  */
+  {
+    const prevOut = id ? ((books.find(b => b.id === id) || {}).outnum || '') : '';
+    const oEl = document.getElementById('f-outnum');
+    const typedOut = toLatinDigits(oEl.value).trim();
+    const newOut = !!typedOut && !sameNumber(typedOut, prevOut);
+    if (!id || newOut) {
+      await catchUpBeforeNumbering();
+      const moves = [];
+      const wEl = document.getElementById('f-warida');
+      const entryYear = (getDateISO('f-dateentry') || localISO(new Date())).slice(0, 4);
+      if (!id && warida && wEl.dataset.offered && sameNumber(warida, wEl.dataset.offered) &&
+          books.some(b => sameNumber(b.warida, warida) && (!waridaAuto.yearly || bookYear(b) === entryYear))) {
+        const fresh = nextWaridaNumber();
+        if (!sameNumber(fresh, warida)) {
+          moves.push({ label: 'ژمارەی واریدە', from: warida, to: fresh });
+          warida = fresh;
+          wEl.value = fresh;
+          wEl.dataset.offered = fresh;
+        }
+      }
+      if (newOut && wasOffered(oEl, typedOut) && usedOutnums().has(parseInt(typedOut, 10))) {
+        const freshOut = nextOutnumNumber();
+        if (!sameNumber(freshOut, typedOut)) {
+          moves.push({ label: 'ژمارەی دەرچوو', from: typedOut, to: freshOut });
+          oEl.value = freshOut;
+          oEl.dataset.offered = freshOut;
+          oEl.dataset.suggestion = freshOut;
+        }
+      }
+      if (!id) {
+        const sq = parseInt(document.getElementById('f-seq').value, 10);
+        if (sq && seqInUse(sq) && sq < nextSequence()) setSeqDisplay(nextSequence());
+      }
+      tellNumbersMoved(moves);
     }
   }
 
@@ -15667,8 +16664,17 @@ async function saveBook() {
     data.transferBy = actorLabel();
     data.rejectNote = '';
     data.rejectedBy = '';
-  } else if (!data.reason) {
+  } else if (!data.reason && priorReason) {
+    // only when the department was really taken off — saving a record that is
+    // still with the ministry must not withdraw an offer that is waiting
     data.transferState = '';
+  }
+
+  // the director's transfer, chosen inside the form by an account allowed to
+  {
+    const prior = id ? books.find(b => b.id === id) : null;
+    const tp = formTransferPatch(Object.assign({}, prior || {}, data));
+    if (tp) Object.assign(data, tp);
   }
   if (listsChanged) refreshPlaceSelects();
 
@@ -15845,13 +16851,16 @@ function prepareNextEntry() {
   // outgoing-only letters take no واریدە number at all
   document.getElementById('f-warida').value =
     (!outOnlyEntry && waridaAuto.enabled) ? nextWaridaNumber() : '';
+  markOffered('f-warida', !outOnlyEntry && waridaAuto.enabled);
   fillPlaceSelect('f-source', '');
   document.getElementById('f-num').value = '';
   fillPlaceSelect('f-subject', '');
   fillPlaceSelect('f-subjectout', '');
   setDateISO('f-datein', '');
   fillPlaceSelect('f-reason', '');
+  prepareFormTransfer(null, false);
   document.getElementById('f-outnum').value = '';
+  forgetOffered('f-outnum');
   setDateISO('f-dateout', '');
   fillPlaceSelect('f-dest', '');
   document.getElementById('f-note').value = '';
@@ -15928,6 +16937,8 @@ document.getElementById('overlay').addEventListener('dblclick', e => { if (backd
 });
 
 document.getElementById('search').addEventListener('input', () => { currentPage = 1; render(); });
+document.getElementById('searchWarida').addEventListener('input', () => { currentPage = 1; render(); });
+latinDigitsLive(document.getElementById('searchWarida'));
 document.getElementById('sortMode').addEventListener('change', function () {
   try { localStorage.setItem(SORT_KEY, this.value); } catch (e) {}
   render();
@@ -16000,11 +17011,183 @@ function readLocal(key, fallback) {
 }
 
 async function buildFullBackup() {
+  /*
+    The confidential register is only read into memory when someone opens it,
+    so a backup made before that would silently lack it. Anyone allowed a full
+    copy (or the confidential register itself) gets it read in first.
+  */
+  if (!secretBooks.length && (canFullBackup() || can('secret'))) {
+    try { await loadSecretBooks(); } catch (e) { /* the backup still holds everything else */ }
+  }
   let fullLog = [];
   try { fullLog = await dbGetAllActivity(); }
   catch (e) { fullLog = readActivityLog(); }
   return buildFullBackupSync(fullLog);
 }
+
+/*
+  Everything, as files to keep: the full backup, the same records as an Excel
+  workbook, and the accounts on their own. Used before the system is cleared.
+*/
+async function buildEverythingFiles(tag) {
+  const stamp = localISO(new Date());
+  const files = [];
+  const data = await buildFullBackup();           // reads the confidential register in too
+  files.push({
+    name: 'daxil-' + tag + '-' + stamp + '.json', short: 'JSON', what: 'هەموو داتاکان \u2014 بۆ گەڕاندنەوە',
+    blob: new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  });
+  if (typeof XLSX !== 'undefined') {
+    const arr = XLSX.write(buildFullBackupWorkbook(), { bookType: 'xlsx', type: 'array' });
+    files.push({
+      name: 'daxil-' + tag + '-' + stamp + '.xlsx', short: 'ئێکسڵ', what: 'ئێکسڵ \u2014 بۆ خوێندنەوە',
+      blob: new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    });
+  }
+  if (!users.length) loadUsers();
+  files.push({
+    name: 'daxil-users-' + tag + '-' + stamp + '.json', short: 'بەکارهێنەران', what: 'بەکارهێنەران',
+    blob: new Blob([JSON.stringify(users, null, 2)], { type: 'application/json' })
+  });
+  return { files: files, data: data };
+}
+
+async function saveFilesOneByOne(files) {
+  for (let i = 0; i < files.length; i++) {
+    downloadBlob(files[i].blob, files[i].name);
+    if (i < files.length - 1) await new Promise(r => setTimeout(r, 1200));     // one save at a time
+  }
+}
+
+async function downloadEverything(tag) {
+  const pack = await buildEverythingFiles(tag);
+  await saveFilesOneByOne(pack.files);
+  return pack.files.map(f => f.name);
+}
+
+/*
+  باکئەپی تەواوی سیستەم — the one button for "everything": both teams, the
+  accounts, both teams' ژمارەی واریدە and ژمارەی دەرچوو with their rules,
+  the lists, the bin and the history. What it holds is listed on screen.
+*/
+async function runFullBackup(host) {
+  if (!canFullBackup()) return null;
+  const pack = await buildEverythingFiles('backup');
+  await saveFilesOneByOne(pack.files);
+  markBackupDone();
+  if (host) showFullBackupResult(host, pack);
+  return pack;
+}
+
+function showFullBackupResult(host, pack) {
+  const d = pack.data;
+  const c = d.counters || {};
+  const t1 = c.team1 || {};
+  const t2 = c.team2;
+  const v = x => '<b>' + ((x || x === 0) && x !== '0' && x !== 0 ? escapeHtml(String(x)) : '\u2014') + '</b>';
+  host.innerHTML =
+    '<div class="backup-ok"><b>\u2713 باکئەپی تەواو دابەزێنرا</b> \u2014 بۆ فۆڵدەری <b>Downloads</b>:<br>' +
+    pack.files.map(f => '&nbsp;&nbsp;\u2022 ' + escapeHtml(f.name) +
+      ' <span style="color:var(--ink-soft);">(' + escapeHtml(f.what) + ')</span>').join('<br>') +
+    '<br><br><b>ئەم باکئەپە ئەمانەی تێدایە:</b><br>' +
+    '&nbsp;&nbsp;\u2022 تیمی ١: <b>' + (d.books || []).length + '</b> نووسراو<br>' +
+    (t2 ? '&nbsp;&nbsp;\u2022 تیمی ٢ (نهێنی): <b>' + (d.secretBooks || []).length + '</b> نووسراو<br>' : '') +
+    '&nbsp;&nbsp;\u2022 بەکارهێنەران: <b>' + (d.users || []).length + '</b><br>' +
+    '&nbsp;&nbsp;\u2022 ژمارەی واریدە (ساڵی ' + escapeHtml(String(c.year || '')) + ') \u2014 تیمی ١: دوایین ' + v(t1.lastWarida) +
+      '، داهاتوو ' + v(t1.nextWarida) +
+      (t2 ? ' | تیمی ٢: دوایین ' + v(t2.lastWarida) + '، داهاتوو ' + v(t2.nextWarida) : '') + '<br>' +
+    '&nbsp;&nbsp;\u2022 ژمارەی دەرچوو \u2014 تیمی ١: دوایین ' + v(t1.lastOutnum) + '، داهاتوو ' + v(t1.nextOutnum) +
+      (t2 ? ' | تیمی ٢: دوایین ' + v(t2.lastOutnum) + '، داهاتوو ' + v(t2.nextOutnum) : '') + '<br>' +
+    '&nbsp;&nbsp;\u2022 لیستەکان، سڕاوەکان (' + (d.trash || []).length + ')، تۆماری گۆڕانکارییەکان و ڕێکخستنەکان<br>' +
+    'تکایە کۆپییان بکە بۆ شوێنێکی پارێزراو (USB یان MEGA).</div>' +
+    '<div class="backup-note">ئەگەر هەموو فایلەکان دانەبەزین، لێرەوە یەک یەک دایانبەزێنە:<br>' +
+    pack.files.map((f, i) => '<button type="button" class="small ghost" data-dl-one="' + i + '">' +
+      escapeHtml(f.short) + '</button>').join(' ') + '</div>';
+  host.querySelectorAll('[data-dl-one]').forEach(btn => btn.addEventListener('click', () => {
+    const f = pack.files[Number(btn.dataset.dlOne)];
+    if (f) downloadBlob(f.blob, f.name);
+  }));
+}
+
+/* both teams' counters as they stand, so a backup shows (and keeps) where every register is */
+function numberCountersSnapshot() {
+  const year = currentYearStr();
+  const highest = (list, field, yearOf, withFollowUps) => {
+    let max = 0;
+    const take = v => { const n = parseInt(toLatinDigits(v || ''), 10); if (!isNaN(n) && n > max) max = n; };
+    list.forEach(b => {
+      if (yearOf(b) === year) take(b[field]);
+      if (withFollowUps) (b.followUps || []).forEach(f => { if (followUpYear(f) === year) take(f.outnum); });
+    });
+    return max;
+  };
+  const out = {
+    year: year,
+    team1: {
+      lastWarida: highest(books, 'warida', bookYear, false),
+      nextWarida: nextWaridaNumber(),
+      waridaAutomatic: !!waridaAuto.enabled,
+      lastOutnum: highest(books, 'outnum', bookYear, true),
+      nextOutnum: nextOutnumNumber(),
+      nextSeq: nextSequence()
+    },
+    team2: null
+  };
+  if (isSuperAdmin() || can('secret') || canFullBackup()) {
+    out.team2 = {
+      lastWarida: highest(secretBooks || [], 'warida', secretYear, false),
+      nextWarida: nextSecretNumber('warida'),
+      lastOutnum: highest(secretBooks || [], 'outnum', secretYear, true),
+      nextOutnum: nextSecretNumber('outnum')
+    };
+  }
+  return out;
+}
+
+/* the full backup as a workbook: both teams, the numbers of both, and the accounts (never a password) */
+function buildFullBackupWorkbook() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(books.map(bookToRow)), 'تیمی ١');
+  const c = numberCountersSnapshot();
+  if (c.team2) {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(secretRowsForExcel(secretBooks || [])), 'تیمی ٢ نهێنی');
+  }
+  const dash = x => (x ? String(x) : '\u2014');
+  const row = (team, what, last, next, start, auto) => ({
+    'ساڵ': c.year, 'تیم': team, 'ژمارە': what,
+    'دوایین ژمارەی بەکارهاتوو': dash(last), 'ژمارەی داهاتوو': String(next),
+    'ژمارەی دەستپێک': String(start || 1), 'خۆکار': auto ? 'بەڵێ' : 'نەخێر'
+  });
+  const rows = [
+    row('تیمی ١', 'ژمارەی واریدە', c.team1.lastWarida, c.team1.nextWarida, waridaAuto.start, waridaAuto.enabled),
+    row('تیمی ١', 'ژمارەی دەرچوو', c.team1.lastOutnum, c.team1.nextOutnum, outnumAuto.start, outnumAuto.enabled),
+    row('تیمی ١', 'ژمارەی زنجیرە', c.team1.nextSeq - 1, c.team1.nextSeq, seqSettings.start, true)
+  ];
+  if (c.team2) {
+    rows.push(row('تیمی ٢', 'ژمارەی واریدە', c.team2.lastWarida, c.team2.nextWarida, secretNums.inStart, true));
+    rows.push(row('تیمی ٢', 'ژمارەی دەرچوو', c.team2.lastOutnum, c.team2.nextOutnum, secretNums.outStart, true));
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'ژمارەکان');
+  if (!users.length) loadUsers();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(users.map(u => ({
+    'ناوی چوونەژوورەوە': u.user || '',
+    'ناو': u.name || '',
+    'ڕۆڵ': u.superAdmin ? 'بەڕێوەبەری سەرەکی' : roleLabelKu(u.role),
+    'هۆبە': (u.depts && u.depts.length) ? u.depts.join('، ') : (u.reason || ''),
+    'دەسەڵاتەکان': u.superAdmin ? 'هەموو'
+      : PERM_DEFS.filter(p => (u.perms || defaultPerms(u.role))[p.key]).map(p => p.label).join('، ')
+  }))), 'بەکارهێنەران');
+  return wb;
+}
+
+document.getElementById('fullBackupBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('fullBackupBtn');
+  const host = document.getElementById('fullBackupResult');
+  btn.disabled = true;
+  try { await runFullBackup(host); }
+  catch (e) { console.error(e); alert('باکئەپ دانەبەزی: ' + (e && e.message ? e.message : '')); }
+  finally { btn.disabled = false; }
+});
 
 function buildFullBackupSync(fullLog) {
   return {
@@ -16031,10 +17214,15 @@ function buildFullBackupSync(fullLog) {
     waridaAuto: waridaAuto,
     outnumAuto: outnumAuto,
     seqSettings: seqSettings,
+    // where both teams' registers stand: last number used and the next one
+    counters: numberCountersSnapshot(),
     brand: brandSettings,
     deleteNotices: deleteNotices,
     deleteNoticesDismissed: deleteNoticesDismissed,
     backupSettings: readLocal(BACKUP_KEY, null),
+    // deleted records still in the bin (30 days), and deleted accounts
+    trash: loadTrash(),
+    removedUsers: removedUsers,
     activityLog: fullLog || readActivityLog(),
     sortMode: (function () { try { return localStorage.getItem(SORT_KEY); } catch (e) { return null; } })()
   };
@@ -16172,6 +17360,16 @@ async function applyImportedBackup(parsed) {
       if (Array.isArray(parsed.places)) summary += '\n\u2022 ' + parsed.places.length + ' شوێن';
       if (Array.isArray(parsed.subjects)) summary += '\n\u2022 ' + parsed.subjects.length + ' بابەت';
       if (Array.isArray(parsed.reasons)) summary += '\n\u2022 ' + parsed.reasons.length + ' هۆبە';
+      if (Array.isArray(parsed.secretBooks) && parsed.secretBooks.length) {
+        summary += '\n\u2022 ' + parsed.secretBooks.length + ' نووسراوی نهێنی (تیمی ٢)';
+      }
+      if (parsed.counters && parsed.counters.team1) {
+        const c1 = parsed.counters.team1, c2 = parsed.counters.team2;
+        const n = x => (x ? String(x) : '\u2014');
+        summary += '\n\u2022 ژمارەکانی ساڵی ' + (parsed.counters.year || '') +
+          ': واریدەی تیمی ١ تا ' + n(c1.lastWarida) + '، دەرچووی تیمی ١ تا ' + n(c1.lastOutnum) +
+          (c2 ? '، واریدەی تیمی ٢ تا ' + n(c2.lastWarida) + '، دەرچووی تیمی ٢ تا ' + n(c2.lastOutnum) : '');
+      }
       if (parsed.exportedAt) summary += '\n\nبەرواری دروستکردن: ' + formatDate(String(parsed.exportedAt).slice(0, 10));
     }
     summary += '\n\nتۆمارەکان تێکەڵ دەکرێن — هیچ تۆمارێکی ئێستا نەدەسڕدرێتەوە. بەردەوام بیت؟';
@@ -16249,10 +17447,21 @@ async function applyImportedBackup(parsed) {
       if (parsed.waridaAuto) { waridaAuto = Object.assign(waridaAuto, parsed.waridaAuto); saveWaridaAuto(); restored.push('ڕێکخستنی ژمارەکان'); }
       if (parsed.outnumAuto) { outnumAuto = Object.assign(outnumAuto, parsed.outnumAuto); saveOutnumAuto(); }
       if (parsed.seqSettings) { seqSettings = Object.assign(seqSettings, parsed.seqSettings); saveSeqSettings(); }
+      if (parsed.waridaAuto || parsed.outnumAuto || parsed.seqSettings || parsed.secretNums) stampNumbering();
       if (parsed.brand) { brandSettings = Object.assign({}, DEFAULT_BRAND, parsed.brand); saveBrand(); applyBrand(); }
       mergeDeleteNotices(parsed);
       if (parsed.backupSettings) {
         try { localStorage.setItem(BACKUP_KEY, JSON.stringify(parsed.backupSettings)); } catch (err2) {}
+      }
+      if (Array.isArray(parsed.trash) && parsed.trash.length) {
+        const bin = loadTrash();
+        const seen = new Set(bin.map(t => (t.deletedAt || '') + '|' + ((t.record && t.record.id) || '')));
+        let back = 0;
+        parsed.trash.forEach(t => {
+          const k = (t && t.deletedAt || '') + '|' + ((t && t.record && t.record.id) || '');
+          if (t && t.record && !seen.has(k)) { bin.push(t); seen.add(k); back++; }
+        });
+        if (back) { saveTrash(bin); restored.push('سڕاوەکان (' + back + ')'); }
       }
       if (Array.isArray(parsed.activityLog) && parsed.activityLog.length) {
         const n = mergeActivityLog(parsed.activityLog);

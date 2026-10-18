@@ -304,6 +304,14 @@
     this._chunks = [];
 
     var h = this._h;
+    // two windows of the app on one phone share a device, and so its file names: one at a time
+    if (navigator.locks && navigator.locks.request) {
+      return navigator.locks.request('daxil-mega-write:' + h.name, function () { return sendWhole(h, bytes); });
+    }
+    return sendWhole(h, bytes);
+  };
+
+  async function sendWhole(h, bytes) {
     try {
       var dir = await resolveDir(h.dir);
       var name = h.name;
@@ -337,7 +345,16 @@
         attributes: { c: megaFingerprint(bytes, Date.now() / 1000) }
       }, payload).complete;
 
-      var old = named(dir, name, false);
+      /*
+        Which files carry the name right now is asked of MEGA itself, not of the
+        list kept here: a list from before the app slept in the background, or
+        from before another window of the app wrote, does not know the newest
+        copy — and giving the new file a name another file still has is what
+        makes MEGA's desktop app stop with a "name conflict". Every file of that
+        name goes, so a conflict left by an older version heals here too.
+      */
+      dir = await resolveDir(h.dir, 0);
+      var old = named(dir, name, false).filter(function (n) { return n.nodeId !== sent.nodeId; });
       for (var i = 0; i < old.length; i++) {
         // already gone (removed from another device meanwhile) is as good as removed
         try { await old[i].delete(true); }
@@ -346,8 +363,10 @@
       }
       await sent.rename(name);
       sent.name = name;
+      // the list fetched above still shows the temporary name for this file
+      if (storage && storage.files && storage.files[sent.nodeId]) storage.files[sent.nodeId].name = name;
     } catch (e) { throw translate(e); }
-  };
+  }
 
   /* ---------------- handles ---------------- */
 
