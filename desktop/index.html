@@ -2186,7 +2186,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="login-footer" id="loginFooter">
-        Version <span id="appVersion">2.97.0</span><br>
+        Version <span id="appVersion">2.98.0</span><br>
         &copy; 2026 <span id="loginFooterMinistry">وەزارەتی شارەوانی و گەشتوگوزار</span>
       </div>
       <div class="design-switch-row">
@@ -9496,6 +9496,7 @@ function renderDeleteNotices() {
   if (!deleteNoticesOpen) {
     host.className = 'dn-closed';
     host.innerHTML = toggle;
+    placeDeleteNotices();
     return;
   }
 
@@ -9524,7 +9525,43 @@ function renderDeleteNotices() {
         '</div>').join('') +
       '</div>' +
     '</div>' + toggle;
+  placeDeleteNotices();
 }
+
+/*
+  On a phone the alert buttons (★ and ✕) move to the same bottom corner as
+  the deleted-records button, and the two used to land on top of each other.
+  The deleted-records button now sits just above whatever the alerts take up
+  in that corner — one button, two, or opened into cards.
+*/
+function placeDeleteNotices() {
+  const dn = document.getElementById('deleteNoticeStack');
+  if (!dn) return;
+  dn.style.bottom = '';                      // back to its own place first
+  const stack = ['alertStack', 'secAlertStack'].map(id => document.getElementById(id))
+    .find(el => el && getComputedStyle(el).display !== 'none' && el.children.length);
+  if (!stack) return;
+  let top = Infinity, left = Infinity, right = -Infinity;
+  Array.from(stack.children).forEach(c => {
+    const r = c.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    top = Math.min(top, r.top); left = Math.min(left, r.left); right = Math.max(right, r.right);
+  });
+  if (top === Infinity) return;
+  const d = dn.getBoundingClientRect();
+  if (d.left < right && d.right > left && d.bottom > top - 8) {
+    dn.style.bottom = Math.ceil(window.innerHeight - top + 12) + 'px';
+  }
+}
+
+['alertStack', 'secAlertStack'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el && window.MutationObserver) {
+    new MutationObserver(() => placeDeleteNotices())
+      .observe(el, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
+  }
+});
+window.addEventListener('resize', placeDeleteNotices);
 
 function canDeleteRecords() {
   if (isSuperAdmin()) return true;
