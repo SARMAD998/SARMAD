@@ -547,4 +547,22 @@
       defaultValue === undefined || defaultValue === null ? '' : String(defaultValue));
     return typeof v === 'string' ? v : null;
   };
+
+  /*
+    Printing. Electron sends window.print() straight to the Windows dialog,
+    which has no preview ("This app doesn't support print preview"). An
+    installer from 2.96 on shows a preview window first — the pages as a PDF,
+    with print, save as PDF and close. An older installer prints as before.
+  */
+  if (typeof desktop.printPreview === 'function') {
+    var plainPrint = window.print.bind(window);
+    window.print = function () {
+      desktop.printPreview().then(function (shown) {
+        if (shown !== true) plainPrint();
+      }, function (e) {
+        console.error('Desktop shim: print preview failed, printing directly', e);
+        plainPrint();
+      });
+    };
+  }
 })();

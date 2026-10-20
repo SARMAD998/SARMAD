@@ -511,7 +511,16 @@
     needCode: 'ئەم هەژمارە کۆدی دوو-هەنگاوی پێویستە.',
     offline: 'نەتوانرا پەیوەندی بە MEGA بکرێت. ئینتەرنێتەکەت بپشکنە و دووبارە هەوڵ بدەرەوە.',
     folderTitle: 'فۆڵدەری هاوکاتکردن',
-    folderFound: 'ئەم فۆڵدەرانە پێشتر بۆ هاوکاتکردن بەکارهاتوون. یەکێکیان هەڵبژێرە:',
+    folderFound: 'ئەم فۆڵدەرانە کلیلی نووسینگەیان تێدایە — کۆمپیوتەرەکان بەکاریان دەهێنن:',
+    folderAll: 'هەموو فۆڵدەرەکانی MEGA:',
+    folderSearch: 'گەڕان بە ناوی فۆڵدەر...',
+    refresh: 'نوێکردنەوەی لیست',
+    hasKey: 'کلیلی تێدایە',
+    noMatch: 'هیچ فۆڵدەرێک بەم ناوە نییە.',
+    noKeyWarn: 'ئەم فۆڵدەرە هێشتا کلیلی نووسینگەی تێدا نییە.\n\n' +
+               'باشترین ڕێگا: یەکەم جار لە کۆمپیوتەرەکە ئەم فۆڵدەرە هەڵبژێرە («گۆڕینی فۆڵدەر»)، یەک خولەک چاوەڕێ بکە، ' +
+               'پاشان لێرە «نوێکردنەوەی لیست» دابگرە.\n\n' +
+               'ئەگەر لێرە بەردەوام بیت، ئەم مۆبایلە کلیلێکی نوێ دروست دەکات کە کۆمپیوتەرەکان ناتوانن بیخوێننەوە. بەردەوام بم؟',
     folderNone: 'هیچ فۆڵدەرێکی هاوکاتکردن لەم هەژمارەدا نەدۆزرایەوە. ئەگەر کۆمپیوتەرەکانی نووسینگە پێشتر هاوکات دەکەن، ' +
                 'هەمان ئەو فۆڵدەرە هەڵبژێرە کە ئەوان بەکاریدەهێنن. ئەگینا فۆڵدەرێکی نوێ دروست بکە.',
     folderNew: 'دروستکردنی فۆڵدەری نوێ بەم ناوە:',
@@ -608,44 +617,89 @@
     return '/' + parts.join('/');
   }
 
-  /* which MEGA folder holds the office's files; resolves a folder node, or null if cancelled */
+  /*
+    Which MEGA folder holds the office's files; resolves a folder node, or null
+    if cancelled. Folders that hold the office key (the computers use them) come
+    first; below them every folder of the account, with a search box, and a
+    button that asks MEGA again — a folder made a moment ago on a computer
+    appears once MEGA has it. A phone joining for the first time, with exactly
+    one office folder in the account, takes it without asking.
+  */
   async function folderDialog() {
     await freshTree(0);
-    var root = storage.root;
-    if (!root) throw domError('NotReadableError', 'MEGA did not return the cloud drive.');
+    if (!storage.root) throw domError('NotReadableError', 'MEGA did not return the cloud drive.');
 
-    // a folder already used for sync is recognised by the office key file inside it
-    var used = [];
-    root.filter(function (f) { return !f.directory && f.name === KEY_FILE; }, true).forEach(function (f) {
-      if (f.parent && f.parent !== root && used.indexOf(f.parent) === -1) used.push(f.parent);
-    });
-    if (used.length === 1) return used[0];
+    var keyed = [], all = [];
+    var collect = function () {
+      var root = storage.root;
+      keyed = []; all = [];
+      root.filter(function (f) { return !f.directory && f.name === KEY_FILE; }, true).forEach(function (f) {
+        if (f.parent && f.parent !== root && keyed.indexOf(f.parent) === -1) keyed.push(f.parent);
+      });
+      root.filter(function (f) { return f.directory; }, true).forEach(function (f) { all.push(f); });
+      var byPath = function (a, b) { return pathOf(a).localeCompare(pathOf(b)); };
+      keyed.sort(byPath);
+      all.sort(byPath);
+    };
+    collect();
+
+    var chosenBefore = null;
+    try { chosenBefore = await kvGet('megaFolder'); } catch (e) { chosenBefore = null; }
+    if (keyed.length === 1 && !chosenBefore) return keyed[0];
 
     return new Promise(function (resolve) {
       var w = openWindow(TEXT.folderTitle);
-      var options = used.length ? used : (root.children || []).filter(function (c) { return c.directory; });
-      options.sort(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+      var picked = keyed.length === 1 ? keyed[0] : null;
+      var rowStyle = 'display:flex; gap:8px; align-items:center; padding:9px 10px; border-bottom:1px solid var(--line); font-size:13px; cursor:pointer;';
+      var listStyle = 'max-height:190px; overflow-y:auto; border:1px solid var(--line); border-radius:6px; margin-bottom:12px;';
 
-      w.modal.appendChild(el('p', { class: 'vault-text', text: used.length ? TEXT.folderFound : TEXT.folderNone }));
-      var list = el('div', { style: 'max-height:220px; overflow-y:auto; border:1px solid var(--line); border-radius:4px; margin-bottom:12px;' });
-      var picked = null;
-      var rows = [];
-      options.forEach(function (node) {
-        var row = el('label', { style: 'display:flex; gap:8px; align-items:center; padding:9px 10px; border-bottom:1px solid var(--line); font-size:13px; cursor:pointer;' }, [
-          el('input', { type: 'radio', name: 'megaFolder', style: 'width:auto;' }),
-          el('span', { dir: 'ltr', text: pathOf(node), style: 'word-break:break-all; text-align:left; flex:1;' })
-        ]);
-        row.firstChild.addEventListener('change', function () { picked = node; fresh.value = ''; });
-        rows.push(row);
-        list.appendChild(row);
-      });
-      if (options.length) w.modal.appendChild(list);
+      var fresh = el('input', { type: 'text', dir: 'auto', style: 'width:100%;' });
+      var row = function (node) {
+        var hasKey = keyed.indexOf(node) !== -1;
+        var radio = el('input', { type: 'radio', name: 'megaFolder', style: 'width:auto;' });
+        if (picked && picked.nodeId === node.nodeId) radio.checked = true;
+        radio.addEventListener('change', function () { picked = node; fresh.value = ''; });
+        var parts = [radio, el('span', { dir: 'ltr', text: pathOf(node), style: 'word-break:break-all; text-align:left; flex:1;' })];
+        if (hasKey) parts.push(el('span', { text: TEXT.hasKey, style: 'font-size:11px; color:#166534; white-space:nowrap;' }));
+        return el('label', { style: rowStyle }, parts);
+      };
 
-      var fresh = el('input', { type: 'text', dir: 'auto', style: 'width:100%;', value: (used.length || options.length) ? '' : 'Daxil' });
+      var keyedBox = el('div');
+      var search = el('input', { type: 'search', dir: 'auto', placeholder: TEXT.folderSearch, style: 'width:100%; margin-bottom:6px;' });
+      var allList = el('div', { style: listStyle });
+      var renderAll = function () {
+        allList.textContent = '';
+        var q = search.value.trim().toLowerCase();
+        // the office folders are already listed above
+        var shown = all.filter(function (n) {
+          return keyed.indexOf(n) === -1 && (!q || pathOf(n).toLowerCase().indexOf(q) !== -1);
+        });
+        if (!shown.length) allList.appendChild(el('div', { text: TEXT.noMatch, style: 'padding:10px; font-size:12.5px; color:var(--ink-soft);' }));
+        shown.slice(0, 300).forEach(function (n) { allList.appendChild(row(n)); });
+      };
+      var render = function () {
+        keyedBox.textContent = '';
+        keyedBox.appendChild(el('p', { class: 'vault-text', text: keyed.length ? TEXT.folderFound : TEXT.folderNone }));
+        if (keyed.length) {
+          var list = el('div', { style: listStyle });
+          keyed.forEach(function (n) { list.appendChild(row(n)); });
+          keyedBox.appendChild(list);
+        }
+        renderAll();
+      };
+      search.addEventListener('input', renderAll);
       fresh.addEventListener('input', function () {
-        if (fresh.value) { picked = null; rows.forEach(function (r) { r.firstChild.checked = false; }); }
+        if (fresh.value) { picked = null; w.modal.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = false; }); }
       });
-      if (!used.length) w.modal.appendChild(field(TEXT.folderNew, fresh));
+
+      var refresh = el('button', { type: 'button', class: 'ghost small', text: TEXT.refresh, style: 'margin-bottom:12px;' });
+      w.modal.appendChild(keyedBox);
+      w.modal.appendChild(el('div', { style: 'font-size:12.5px; font-weight:700; margin:2px 0 6px;', text: TEXT.folderAll }));
+      w.modal.appendChild(search);
+      w.modal.appendChild(allList);
+      w.modal.appendChild(refresh);
+      w.modal.appendChild(field(TEXT.folderNew, fresh));
+      render();
 
       var err = el('div', { class: 'login-error', style: 'display:none;' });
       var ok = el('button', { type: 'button', text: TEXT.choose });
@@ -658,6 +712,20 @@
       ]));
 
       var busy = false;
+      var showError = function (e) { err.textContent = loginMessage(e); err.style.display = 'block'; };
+
+      refresh.addEventListener('click', async function () {
+        if (busy) return;
+        busy = true; refresh.disabled = true; refresh.textContent = TEXT.wait; err.style.display = 'none';
+        try {
+          await freshTree(0);
+          collect();
+          if (picked) picked = storage.files[picked.nodeId] || null;
+          render();
+        } catch (e) { showError(e); }
+        busy = false; refresh.disabled = false; refresh.textContent = TEXT.refresh;
+      });
+
       ok.addEventListener('click', async function () {
         if (busy) return;
         var name = fresh.value.trim();
@@ -667,13 +735,17 @@
           var node = picked;
           if (!node) {
             if (/[\\/]/.test(name)) throw new Error('/ \\');
-            node = named(root, name, true)[0] || await root.mkdir(name);
+            node = named(storage.root, name, true)[0] || await storage.root.mkdir(name);
+          }
+          // a folder without the office key would make this phone start a key of its own
+          if (!named(node, KEY_FILE, false).length && !window.confirm(TEXT.noKeyWarn)) {
+            busy = false; ok.disabled = false; ok.textContent = TEXT.choose;
+            return;
           }
           w.close();
           resolve(node);
         } catch (e) {
-          err.textContent = loginMessage(e);
-          err.style.display = 'block';
+          showError(e);
           busy = false; ok.disabled = false; ok.textContent = TEXT.choose;
         }
       });
@@ -698,6 +770,8 @@
       catch (e) { throw translate(e); }
       if (folder === 'other-account') continue;
       if (!folder) throw domError('AbortError', 'The user aborted a request.');
+      // remembered, so the next time the folder window is opened it always asks
+      kvSet('megaFolder', folder.nodeId).catch(function () {});
       return new MegaDirectoryHandle(folder.nodeId, [], folder.name || 'MEGA');
     }
   };
