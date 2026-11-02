@@ -9,6 +9,17 @@
 #connectBackupBtn,
 #regrantBackupBtn { display: none !important; }
 
+/*
+  Installed on the Home Screen the app runs full screen, under the clock and
+  battery (status bar "black-translucent"); that strip is painted the header
+  colour of the chosen look so the white clock stays readable.
+*/
+html::before {
+  content: ''; position: fixed; top: 0; left: 0; right: 0; height: env(safe-area-inset-top);
+  background: #2f4a52; z-index: 9000; pointer-events: none;
+}
+html.nd::before { background: #0D2A44; }
+
 /* room for the notch and the home bar when installed on the Home Screen */
 body {
   padding-top: max(32px, env(safe-area-inset-top));
