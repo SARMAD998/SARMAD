@@ -222,6 +222,9 @@
   */
   #introSplash {
     position: fixed; inset: 0; z-index: 10000;
+    /* an iPhone app running under the clock measures the screen without the clock's strip, and a
+       box set to the full height stopped that much short of the bottom edge — it reaches down here */
+    bottom: calc(-1 * env(safe-area-inset-top, 0px));
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: radial-gradient(circle at 50% 42%, #ffffff 0%, var(--paper) 72%);
     transition: opacity .6s ease;
@@ -346,15 +349,7 @@
     html.nd #introSplash .sp-title { font-size: 34px; letter-spacing: -.01em; }
     html.nd #introSplash .intro-logo { width: 112px; height: 112px; }
   }
-  @media (prefers-reduced-motion: reduce) {
-    #introSplash *, #introSplash *::before { animation: none !important; }
-    html.nd #introSplash .intro-logo, html.nd #introSplash .sp-title,
-    html.nd #introSplash .sp-by, html.nd #introSplash .sp-ku { opacity: 1; }
-    html.nd #introSplash .sp-l { stroke-dashoffset: 0; }
-    html.nd #introSplash .sp-rule { width: 120px; }
-    html.nd #introSplash .sp-orbit { display: none; }
-    #introSplash .sp-bar span { width: 100%; }
-  }
+  /* the opening screen moves even when the phone asks for less motion: the office asked for it */
   @media print { #introSplash { display: none !important; } }
 
   /* first-time setup and the office-key window */
@@ -2222,7 +2217,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="login-footer" id="loginFooter">
-        Version <span id="appVersion">2.100.0</span><br>
+        Version <span id="appVersion">2.101.0</span><br>
         &copy; 2026 <span id="loginFooterMinistry">وەزارەتی شارەوانی و گەشتوگوزار</span>
       </div>
       <div class="design-switch-row">
