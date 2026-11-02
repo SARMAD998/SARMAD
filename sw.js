@@ -9,7 +9,7 @@
   The version and the list of files below are filled in by scripts/build-webapp.js.
 */
 
-const VERSION = "36dcfd040d2d";
+const VERSION = "1be646c64fd3";
 const CACHE = 'daxil-app-' + VERSION;
 const FILES = [
   "./",

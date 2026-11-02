@@ -118,7 +118,11 @@
     padding: 3px 12px; font-size: 16px; font-weight: 800;
     min-width: 44px; text-align: center; letter-spacing: .5px;
   }
-  .row-title .sub-num { color: var(--ink-soft); font-weight: 400; font-size: 13.5px; margin-right: 6px; }
+  /* the واریدە number beside the title: bold and underlined, like the rows below */
+  .row-title .sub-num {
+    color: var(--ink); font-weight: 800; font-size: 17px; margin-right: 8px;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px;
+  }
   .row-top-right { display: flex; align-items: center; gap: 8px; }
   .row-meta {
     display: grid;
@@ -127,6 +131,11 @@
   }
   .col-label { font-size: 11px; color: var(--ink-soft); display: block; margin-bottom: 3px; }
   .col-val { font-size: 15px; line-height: 1.6; }
+  /* ژمارەی واریدە and ژمارەی دەرچوو: bigger, bold and underlined, so they are found at a glance */
+  .col-val.num-big {
+    font-size: 19px; font-weight: 800; letter-spacing: .02em;
+    text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 5px;
+  }
   .badge { display: inline-block; font-size: 12px; padding: 4px 12px; border-radius: 10px; font-weight: 700; white-space: nowrap; }
   /* solid fills, matching the weight of the action buttons */
   .badge.status-pending { background: #DC2626; color: #fff; }
@@ -2186,7 +2195,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="login-footer" id="loginFooter">
-        Version <span id="appVersion">2.98.0</span><br>
+        Version <span id="appVersion">2.99.0</span><br>
         &copy; 2026 <span id="loginFooterMinistry">وەزارەتی شارەوانی و گەشتوگوزار</span>
       </div>
       <div class="design-switch-row">
@@ -12474,7 +12483,7 @@ function render() {
     list.innerHTML = pageItems.map(b => `
       <div class="row status-${displayStatus(b)}">
         <div class="row-top">
-          <div class="row-title"><span class="seq-tag">${escapeHtml(String(b.seq || '\u2014'))}</span>${escapeHtml(b.subject || 'بێ بابەت')}<span class="sub-num">#${escapeHtml(b.warida || '\u2014')}</span></div>
+          <div class="row-title"><span class="seq-tag">${escapeHtml(String(b.seq || '\u2014'))}</span>${escapeHtml(b.subject || 'بێ بابەت')}${b.warida ? '<span class="sub-num">' + escapeHtml(b.warida) + '</span>' : ''}</div>
           <div class="row-top-right">
             <span class="badge status-${displayStatus(b)}">${statusLabel(displayStatus(b))}</span>
             ${b.isSecret ? '<span class="badge badge-secret">نهێنی</span>' : ''}
@@ -12521,7 +12530,7 @@ function render() {
             </div>
             <div>
               <span class="col-label">ژمارەی واریدە</span>
-              <span class="col-val">${escapeHtml(b.warida || '\u2014')}</span>
+              <span class="col-val${b.warida ? ' num-big' : ''}">${escapeHtml(b.warida || '\u2014')}</span>
             </div>
             <div>
               <span class="col-label">ئەو شوێنەی بۆمان هاتووە</span>
@@ -12556,7 +12565,7 @@ function render() {
             <div class="sec-group-title">زانیاری دەرچوو</div>
             <div>
               <span class="col-label">ژمارەی دەرچوو</span>
-              <span class="col-val">${escapeHtml(b.outnum || '\u2014')}</span>
+              <span class="col-val${b.outnum ? ' num-big' : ''}">${escapeHtml(b.outnum || '\u2014')}</span>
             </div>
             <div>
               <span class="col-label">بەرواری دەرچوو</span>
@@ -14944,7 +14953,7 @@ function renderSecret() {
         '</div>' +
         '<div class="sec-group sec-group-out">' +
           '<div class="sec-group-title">زانیاری دەرچوو</div>' +
-          '<div><span class="col-label">ژمارەی دەرچوو</span><span class="col-val">' + escapeHtml(b.outnum || '\u2014') + '</span></div>' +
+          '<div><span class="col-label">ژمارەی دەرچوو</span><span class="col-val' + (b.outnum ? ' num-big' : '') + '">' + escapeHtml(b.outnum || '\u2014') + '</span></div>' +
           '<div><span class="col-label">بەرواری دەرچوو</span><span class="col-val">' + formatDate(b.dateOut) + '</span></div>' +
           '<div><span class="col-label">ئەو شوێنەی بۆی دەڕوا</span><span class="col-val">' + escapeHtml(destText(b) || '\u2014') + '</span></div>' +
           (b.subjectOut ? '<div><span class="col-label">بابەتی دەرچوو</span><span class="col-val">' + escapeHtml(b.subjectOut) + '</span></div>' : '') +
