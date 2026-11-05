@@ -222,9 +222,6 @@
   */
   #introSplash {
     position: fixed; inset: 0; z-index: 10000;
-    /* an iPhone app running under the clock measures the screen without the clock's strip, and a
-       box set to the full height stopped that much short of the bottom edge — it reaches down here */
-    bottom: calc(-1 * env(safe-area-inset-top, 0px));
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     background: radial-gradient(circle at 50% 42%, #ffffff 0%, var(--paper) 72%);
     transition: opacity .6s ease;
@@ -350,6 +347,11 @@
     html.nd #introSplash .intro-logo { width: 112px; height: 112px; }
   }
   /* the opening screen moves even when the phone asks for less motion: the office asked for it */
+  /*
+    An iPhone app on the Home Screen does not show the page in the strip at the very bottom; it fills
+    it with the page's own background. While the new-look opening screen is up, that is its blue.
+  */
+  html.nd.splashing, html.nd.splashing body { background: #0D2A44 !important; }
   @media print { #introSplash { display: none !important; } }
 
   /* first-time setup and the office-key window */
@@ -2092,6 +2094,13 @@ document.addEventListener('DOMContentLoaded', function () {
   if (typeof loadSeqSettings === 'function') loadSeqSettings();
   if (typeof loadSecretNums === 'function') loadSecretNums();
   if (typeof applyYearlyReset === 'function') applyYearlyReset();
+  /*
+    The deletion markers must be known before the first sync pass, which runs
+    before anyone signs in. Without them a deleted letter still sitting in
+    another computer's file came back on every start, and this computer's own
+    markers could be overwritten by the other computers' ones.
+  */
+  if (typeof loadDeletedBooks === 'function') loadDeletedBooks();
   if (typeof initSync === 'function') initSync();
   if (typeof renderNetBanner === 'function') renderNetBanner();
   // a login from the last two weeks signs the person straight in
@@ -2106,6 +2115,7 @@ document.addEventListener('DOMContentLoaded', function () {
 /* which look this computer or phone shows — the old one unless «دیزاینی نوێ» was chosen here */
 (function () {
   try { if (localStorage.getItem('designChoice') === 'new') document.documentElement.classList.add('nd'); } catch (e) {}
+  document.documentElement.classList.add('splashing');
 })();
 </script>
 <!-- the opening screen: the author's name for five seconds while the system starts underneath -->
@@ -2130,7 +2140,10 @@ document.addEventListener('DOMContentLoaded', function () {
   if (window.KRG_LOGO_URL) logo.src = window.KRG_LOGO_URL; else logo.remove();
   setTimeout(function () {
     splash.classList.add('intro-done');
-    setTimeout(function () { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 700);
+    setTimeout(function () {
+      if (splash.parentNode) splash.parentNode.removeChild(splash);
+      document.documentElement.classList.remove('splashing');
+    }, 700);
   }, 5000);
 })();
 </script>
@@ -2217,7 +2230,7 @@ document.addEventListener('DOMContentLoaded', function () {
       </div>
 
       <div class="login-footer" id="loginFooter">
-        Version <span id="appVersion">2.101.0</span><br>
+        Version <span id="appVersion">2.104.0</span><br>
         &copy; 2026 <span id="loginFooterMinistry">وەزارەتی شارەوانی و گەشتوگوزار</span>
       </div>
       <div class="design-switch-row">
@@ -3970,6 +3983,54 @@ document.querySelectorAll('.date-input').forEach(inp => {
 });
 
 let books = [];
+
+/* =====================================================================
+   ئەرشیفی ساڵانە — the yearly archive (state; the code is beside the database)
+
+   About 15,000 letters a year, for decades. Keeping every one of them in
+   memory, in every sync file and in every backup made each save and each
+   sync pass slower year after year. So a letter that is finished, belongs
+   to a past year and has not been touched for two months moves, by itself
+   and once a month, out of the daily register into the archive:
+
+     • on this computer: a second database (daxil-archive), one row per letter;
+     • in the MEGA folder: one sealed file per year per computer,
+       daxil-archive-<year>-<device>.json, so a new computer gets it all back.
+
+   Nothing has to be done when a year ends. Choosing a past year (or
+   «هەموو ساڵەکان») brings its archived letters onto the screen; they are
+   read, printed, edited, answered (صادر) or deleted exactly as before. A
+   letter that is edited goes back to the daily register by itself, and
+   returns to the archive two months after its last change.
+
+   The rules that keep it safe:
+     • a letter still open (ماوە), waiting for a department, or carrying a
+       follow-up from this year never moves;
+     • the daily register always wins: a letter found in both places is
+       taken from the daily register;
+     • a missing letter never deletes anything; only a deletion marker does;
+     • the confidential register (team 2) is not archived;
+     • when a number register does not restart every year, nothing is
+       archived, because the old numbers must stay in view to be skipped.
+   ===================================================================== */
+const ARCHIVE_DB = 'daxil-archive';
+const ARCHIVE_LETTERS = 'letters';           // key "<year>|<id>" -> { k, b: letter }
+const ARCHIVE_INDEX = 'idx';                 // key id -> { id, y: year, u: last change }
+const ARCHIVE_PREFIX = 'daxil-archive-';
+const ARCHIVE_AFTER_DAYS = 60;               // untouched this long, and finished, it moves
+const ARCHIVE_VIEW_MAX = 150000;             // «هەموو ساڵەکان» shows at most this many archived letters
+const ARCHIVE_IDLE_MS = 20000;               // background archive work waits until nobody types
+const ARCHIVE_TICK_MS = 30000;
+const ARCHIVE_INFO_KEY = 'archiveInfo';
+const ARCHIVE_SEEN_KEY = 'archiveFilesSeen';
+let archiveInfo = loadArchiveInfo();         // counts per year, last monthly pass, years to publish
+const archiveLoaded = new Map();             // id -> { s: stamp, y: year } of archived letters now on screen
+const archiveLoadedYears = new Set();
+let archiveEntries = new Map();              // archive files in the shared folder, from the last listing
+let archiveBusy = false;
+let lastUserInputAt = Date.now();
+['keydown', 'pointerdown', 'input'].forEach(ev =>
+  document.addEventListener(ev, () => { lastUserInputAt = Date.now(); }, true));
 const STORAGE_KEY = 'books';
 const PLACES_KEY = 'places';
 const SUBJECTS_KEY = 'subjects';
@@ -4448,7 +4509,7 @@ function healMissingSeq() {
   missing
     .slice()
     .sort((a, b2) => String(a.createdAt || a.entryDate || '').localeCompare(String(b2.createdAt || b2.entryDate || '')))
-    .forEach(b => { b.seq = next++; });
+    .forEach(b => { b.seq = next++; syncTouched.add(b.id); });
   return missing.length;
 }
 
@@ -4700,8 +4761,8 @@ function mergeRemoteNumbering(remote) {
 async function catchUpBeforeNumbering() {
   if (!syncSettings.enabled || !syncDirHandle) return;
   const until = Date.now() + 8000;
-  while (syncBusy && Date.now() < until) await new Promise(r => setTimeout(r, 120));
-  if (syncBusy) return;
+  while ((syncBusy || archiveBusy) && Date.now() < until) await new Promise(r => setTimeout(r, 120));
+  if (syncBusy || archiveBusy) return;
   // the phone keeps the MEGA folder list for a while; this number needs today's
   try { if (window.daxilWeb && typeof window.daxilWeb.lookAfresh === 'function') window.daxilWeb.lookAfresh(); } catch (e) {}
   await Promise.race([
@@ -6234,7 +6295,8 @@ async function storageBreakdown() {
     try { return new Blob([JSON.stringify(obj)]).size; } catch (e) { return 0; }
   };
 
-  rows.push(['نووسراوەکان (IndexedDB)', bytesOf(books), books.length + ' تۆمار']);
+  rows.push(['نووسراوەکان (IndexedDB)', bytesOf(liveBooks()), liveBooks().length + ' تۆمار']);
+  if (archiveInfo.count) rows.push(['ئەرشیفی ساڵانی ڕابردوو (IndexedDB)', archiveInfo.count * 900, archiveInfo.count + ' نووسراو (قەبارەی نزیکەیی)']);
 
   let actCount = 0, actBytes = 0;
   try {
@@ -6292,7 +6354,11 @@ async function refreshStorageInfo() {
   const perRecord = 1024;
   let html = 'شێوازی هەڵگرتن: <b>' +
     (idbAvailable ? 'IndexedDB' : 'localStorage (سنووردار)') + '</b><br>' +
-    'کۆی نووسراوەکان: <b>' + visibleBooks().length.toLocaleString() + '</b><br>';
+    'کۆی نووسراوەکان: <b>' + visibleBooks().length.toLocaleString() + '</b><br>' +
+    (archiveInfo.count
+      ? 'ئەرشیفی ساڵانی ڕابردوو: <b>' + archiveInfo.count.toLocaleString() + '</b> نووسراو ' +
+        '(ساڵانی ' + archiveYearsKnown().sort()[0] + ' تا ' + archiveYearsKnown().sort().reverse()[0] + ')<br>'
+      : '');
 
   if (quota) {
     const free = quota - (usage || 0);
@@ -6567,6 +6633,7 @@ async function freshStart() {
   try {
     books = [];
     try { await dbClearBooks(); } catch (e) { console.error(e); }
+    await archiveClearAll();
     try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
 
     const secIds = secretBooks.map(b => b.id);
@@ -6588,7 +6655,7 @@ async function freshStart() {
           'ژمارەکان لە سەرەتاوە دەستپێدەکەنەوە.\n\n' +
           'دوایین دوو هەنگاو:\n' +
           '١. هەمان کار لەسەر هەموو کۆمپیوتەرەکانی تر بکە.\n' +
-          '٢. فایلەکانی daxil-sync-*.json لە فۆڵدەری MEGA بسڕەوە.\n\n' +
+          '٢. فایلەکانی daxil-sync-*.json و daxil-archive-*.json لە فۆڵدەری MEGA بسڕەوە.\n\n' +
           'بۆ گەڕاندنەوەی داتاکان: ڕێکخستنەکان \u2190 «گەڕاندنەوەی داتای سڕاوە».');
   } catch (e) {
     console.error('Reset failed', e);
@@ -7082,6 +7149,7 @@ function availableYears() {
   const years = new Set([currentYearStr()]);
   books.forEach(b => { const y = bookYear(b); if (y) years.add(y); });
   (secretBooks || []).forEach(b => { const y = secretYear(b); if (y) years.add(y); });
+  archiveYearsKnown().forEach(y => years.add(y));
   return Array.from(years).sort().reverse();
 }
 
@@ -8330,6 +8398,9 @@ function showApp(role, username) {
   }, 1800);
   setTimeout(() => { offerRestoreIfEmpty(); }, 3000);
   setTimeout(() => { renderDeleteNotices(); }, 400);
+  // archived letters from an earlier past-year view are put away; the archive's own work starts
+  if (archiveLoadedYears.size) unloadArchiveYears(Array.from(archiveLoadedYears));
+  startArchiveLoop();
   viewYear = currentYearStr();          // the office always opens in this year
   setTimeout(() => { renderYearControls(); }, 300);
   applyYearlyReset();          // a new year may have begun since the page opened
@@ -9129,7 +9200,7 @@ function liveExcelName() {
 function buildLiveWorkbook() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,
-    XLSX.utils.json_to_sheet(books.map(bookToRow)), 'تیمی ١');
+    XLSX.utils.json_to_sheet(liveBooks().map(bookToRow)), 'تیمی ١');
   if (isSuperAdmin() || can('secret')) {
     XLSX.utils.book_append_sheet(wb,
       XLSX.utils.json_to_sheet(secretRowsForExcel(secretBooks)), 'تیمی ٢ نهێنی');
@@ -9224,8 +9295,8 @@ async function writeBackupFile() {
     try {
       const existing = await backupDirHandle.getFileHandle(jsonName);
       const prev = JSON.parse(await (await existing.getFile()).text());
-      const prevCount = (prev.books || []).length + (prev.secretBooks || []).length;
-      const nowCount = (payload.books || []).length + (payload.secretBooks || []).length;
+      const prevCount = (prev.books || []).length + (prev.secretBooks || []).length + (Number(prev.archivedCount) || 0);
+      const nowCount = (payload.books || []).length + (payload.secretBooks || []).length + (Number(payload.archivedCount) || 0);
       if (prevCount > nowCount) skipJson = true;
     } catch (e) { /* no file yet, or unreadable: write a fresh one */ }
 
@@ -10005,6 +10076,7 @@ let fullWriteForced = false;
 
 function markLocalChange(record) {
   localDirty = true;
+  settleArchiveSoon();
   // an edit to something older than the delta window must reach the full file
   if (record && !withinDeltaWindow(record)) fullWriteForced = true;
   writeLiveExcel();
@@ -10151,30 +10223,62 @@ function sanitizeRemoteStamps(r) {
   return r;
 }
 
+/*
+  Letters changed by a merge, so only those are written back to this
+  computer's storage — writing all of them after every merge (each one locked
+  again on the disk) blocked the screen for seconds on a slower computer.
+*/
+const syncTouched = new Set();
+
 function mergeRemoteBooks(remoteBooks) {
   if (!Array.isArray(remoteBooks)) return 0;
-  const byId = new Map(books.map(b => [b.id, b]));
+  const at = new Map();
+  books.forEach((b, i) => at.set(b.id, i));
   let changes = 0;
 
   remoteBooks.forEach(rb => {
     if (!rb || !rb.id) return;
     sanitizeRemoteStamps(rb);
     if (isDeletedBook(rb.id)) return;   // deleted here, do not bring it back
-    const local = byId.get(rb.id);
-    if (!local) {
+    const idx = at.get(rb.id);
+    if (idx === undefined) {
       books.push(rb);
-      byId.set(rb.id, rb);
+      at.set(rb.id, books.length - 1);
+      syncTouched.add(rb.id);
       changes++;
       return;
     }
+    const local = books[idx];
     const lt = local.updatedAt || local.createdAt || '';
     const rt = rb.updatedAt || rb.createdAt || '';
     if (rt && rt > lt) {
-      const idx = books.findIndex(b => b.id === rb.id);
-      if (idx > -1) { books[idx] = rb; byId.set(rb.id, rb); changes++; }
+      books[idx] = rb;
+      syncTouched.add(rb.id);
+      changes++;
     }
   });
   return changes;
+}
+
+/* the letters a merge changed, written back; everything only when that is not possible */
+async function saveSyncedBooks() {
+  const ids = Array.from(syncTouched);
+  syncTouched.clear();
+  if (!idbAvailable || ids.length > 1500) return saveBooks();
+  settleArchiveSoon();
+  const wanted = new Set(ids);
+  const list = books.filter(b => wanted.has(b.id) && !isArchiveCopy(b));
+  for (let k = 0; k < list.length; k += 200) {
+    try { await dbPutBooks(list.slice(k, k + 200)); }
+    catch (e) { reportStorageFailure(e); return; }
+    if (k + 200 < list.length) await yieldToScreen();
+  }
+  refreshStorageInfo();
+}
+
+/* a short pause so a click or a key press waiting in line is answered between two pieces of work */
+function yieldToScreen() {
+  return new Promise(r => setTimeout(r, 0));
 }
 
 /* confidential records merge on the same newest-wins rule */
@@ -10295,6 +10399,12 @@ function mergeRemoteLists(remote) {
 const peerFileCache = new Map();     // name -> { mtime, size, summary }
 const FULL_RESCAN_MS = 5 * 60 * 1000;
 let lastFullRescan = 0;
+let rescanQueue = [];
+const RESCAN_PER_PASS = 2;
+
+function isConflictCopy(name) {
+  return /\(\d+\)\.json$/.test(name);
+}
 
 function peerSummaryOf(data) {
   return {
@@ -10313,11 +10423,25 @@ async function readSyncFiles() {
   let readBytes = 0, skipped = 0;
 
   const forceFull = (Date.now() - lastFullRescan) > FULL_RESCAN_MS;
-  if (forceFull) { peerFileCache.clear(); lastFullRescan = Date.now(); }
+  /*
+    The safety re-read used to read every file again at once. With many devices
+    in the folder — and MEGA's "(1)", "(2)" copies left by name conflicts — that
+    froze the screen for seconds every five minutes. Now the files wait in a
+    queue and two are read again on each pass; a copy MEGA left beside a file
+    is read when it appears or changes, and otherwise left alone.
+  */
+  if (forceFull) {
+    lastFullRescan = Date.now();
+    rescanQueue = Array.from(peerFileCache.keys()).filter(n => !isConflictCopy(n));
+  }
+  for (let k = 0; k < RESCAN_PER_PASS && rescanQueue.length; k++) peerFileCache.delete(rescanQueue.shift());
   foreignKeyFiles = 0;
+  const listedArchive = new Map();
 
   for await (const entry of syncDirHandle.values()) {
     if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue;
+    // the yearly archive files are only listed here; they are read on their own, rarely
+    if (entry.name.startsWith(ARCHIVE_PREFIX)) { listedArchive.set(entry.name, entry); continue; }
     const isFull = entry.name.startsWith(SYNC_PREFIX);
     const isDelta = entry.name.startsWith(DELTA_PREFIX);
     if (!isFull && !isDelta) continue;
@@ -10351,6 +10475,7 @@ async function readSyncFiles() {
         // accounts and passwords are only ever taken from a sealed file
         data.__sealed = opened.sealed;
         fresh.push(data);
+        await yieldToScreen();            // a file was unlocked and read: let the screen answer
         peerFileCache.set(entry.name, {
           mtime: file.lastModified,
           size: file.size,
@@ -10365,6 +10490,7 @@ async function readSyncFiles() {
     }
   }
 
+  archiveEntries = listedArchive;
   lastSyncStats = { readBytes: readBytes, skipped: skipped, read: fresh.length };
   return { fresh: fresh, peers: cachedPeers };
 }
@@ -10433,7 +10559,7 @@ function withinDeltaWindow(rec) {
 }
 
 async function writeMyDeltaFile() {
-  const recentBooks = books.filter(withinDeltaWindow);
+  const recentBooks = liveBooks().filter(withinDeltaWindow);
   const recentSecret = (secretBooks || []).filter(withinDeltaWindow);
   await writeJsonFile(myDeltaFileName(), {
     deviceId: syncSettings.deviceId,
@@ -10470,8 +10596,8 @@ async function writeMySyncFile() {
     signedInRole: currentAccount
       ? (currentAccount.user === 'SARMAD' ? 'بەڕێوەبەری سەرەکی' : (currentAccount.role || ''))
       : '',
-    count: books.length,
-    books: books,
+    count: liveBooks().length,
+    books: liveBooks(),
     places: places,
     subjects: subjects,
     reasons: reasons,
@@ -10490,7 +10616,7 @@ async function writeMySyncFile() {
 }
 
 async function syncNow(quiet) {
-  if (syncBusy || !syncDirHandle || !syncSettings.enabled) return;
+  if (syncBusy || archiveBusy || !syncDirHandle || !syncSettings.enabled) return;
   syncBusy = true;
   try {
     const perm = await syncDirHandle.queryPermission({ mode: 'readwrite' });
@@ -10515,6 +10641,7 @@ async function syncNow(quiet) {
     peerDevices = [];
 
     // apply the other machine's deletions before merging its records
+    const archGone = [];
     remotes.forEach(r => {
       const rd = r.deletedBooks || {};
       Object.keys(rd).forEach(id => {
@@ -10525,9 +10652,14 @@ async function syncNow(quiet) {
           // the same marker removes a confidential record, too
           const si = secretBooks.findIndex(b => b.id === id);
           if (si > -1) { secretBooks.splice(si, 1); dbDeleteSecret(id).catch(() => {}); changesFromDeletes++; }
+          if (i === -1 && si === -1) archGone.push(id);
         }
       });
     });
+    // a letter deleted on another computer leaves this computer's archive, too
+    if (archGone.length && archiveInfo.count) {
+      if (await archiveRemove(archGone)) changesFromDeletes++;
+    }
     if (changesFromDeletes) saveDeletedBooks();
 
     const badClockPeers = [];
@@ -10547,11 +10679,13 @@ async function syncNow(quiet) {
       });
     });
 
-    // merging touches only the files that actually changed since last time
-    remotes.forEach(r => {
+    // merging touches only the files that actually changed since last time;
+    // between two files the screen gets its turn
+    const liveIds = new Set(books.map(b => b.id));
+    for (const r of remotes) {
       mergeRemoteBrand(r);
       if (mergeDeleteNotices(r)) changes++;
-      changes += mergeRemoteBooks(r.books);
+      changes += mergeRemoteBooks(await filterArchivedRemote(r.books, liveIds));
       changes += mergeRemoteSecret(r.secretBooks);
       if (mergeRemoteLists(r)) changes++;
       // the super admin should see activity from both machines
@@ -10560,12 +10694,15 @@ async function syncNow(quiet) {
       if (mergeRemoteUsers(r)) changes++;
       // the numbering rules, newest first — like accounts, only from a sealed file
       if (r.__sealed && mergeRemoteNumbering(r)) changes++;
-    });
+      await yieldToScreen();
+    }
 
     changes += changesFromDeletes;
     if (changes > 0) {
       healMissingSeq();
-      await saveBooks();
+      await saveSyncedBooks();
+      // letters that came back from the archive are saved now, so they leave it
+      if (unarchiveAfterSave.length) await archiveRemove(unarchiveAfterSave.splice(0));
       // a computer passes on everything it has (the safety net); the phone app only what was done on it
       if (!isPhoneApp()) localDirty = true;
       render();
@@ -11040,9 +11177,9 @@ async function takeSnapshot(reason) {
       k: new Date().toISOString(),
       reason: reason || '',
       by: (typeof actorLabel === 'function') ? actorLabel() : '',
-      counts: { books: books.length, secret: secretBooks.length, users: users.length },
+      counts: { books: liveBooks().length, secret: secretBooks.length, users: users.length },
       data: {
-        books: books,
+        books: liveBooks(),
         secretBooks: secretBooks,
         users: users,
         places: places, subjects: subjects, reasons: reasons,
@@ -11096,6 +11233,9 @@ async function restoreSnapshot(key) {
 
   try {
     const dd = snap.data;
+    forgetArchiveView();
+    viewYear = currentYearStr();
+    renderYearControls();
     books = Array.isArray(dd.books) ? dd.books : [];
     await dbClearBooks();
     if (books.length) await dbPutBooks(books);
@@ -11216,11 +11356,11 @@ async function writeDailyBackup(force) {
     const hourName = 'daxil-hourly-' + today + '-' + hourStamp(now) + '-' + dev + '.json';
 
     // refuse to overwrite a fuller backup with a thinner one
-    const nowCount = books.length + secretBooks.length;
+    const nowCount = liveBooks().length + secretBooks.length + (archiveInfo.count || 0);
     try {
       const existing = await dir.getFileHandle(dayName, { create: false });
       const prev = (await openJson(await (await existing.getFile()).text())).data;
-      const prevCount = (prev.books || []).length + (prev.secretBooks || []).length;
+      const prevCount = (prev.books || []).length + (prev.secretBooks || []).length + (Number(prev.archivedCount) || 0);
       if (prevCount > nowCount) {
         console.warn('Backup skipped: existing file has more records');
         return finish({ ok: false, why: 'would-shrink' });
@@ -11548,6 +11688,678 @@ function dbClearBooks() {
   }));
 }
 
+/* the live store, many letters at once (used when letters move to the archive) */
+function dbDeleteBooks(ids) {
+  return dataDbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(DATA_STORE, 'readwrite');
+    const store = tx.objectStore(DATA_STORE);
+    ids.forEach(id => store.delete(id));
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  }));
+}
+
+/* =====================================================================
+   ئەرشیفی ساڵانە — the yearly archive (see the note beside `books` above)
+   ===================================================================== */
+
+function loadArchiveInfo() {
+  let v = null;
+  try { v = JSON.parse(localStorage.getItem(ARCHIVE_INFO_KEY) || 'null'); } catch (e) { v = null; }
+  if (!v || typeof v !== 'object') v = {};
+  return {
+    count: Number(v.count) || 0,
+    years: (v.years && typeof v.years === 'object') ? v.years : {},
+    lastPass: typeof v.lastPass === 'string' ? v.lastPass : '',
+    firstDone: !!v.firstDone,
+    dirty: Array.isArray(v.dirty) ? v.dirty : []
+  };
+}
+
+function saveArchiveInfo() {
+  archiveInfo.count = Object.keys(archiveInfo.years)
+    .reduce((a, y) => a + Math.max(0, Number(archiveInfo.years[y]) || 0), 0);
+  try { localStorage.setItem(ARCHIVE_INFO_KEY, JSON.stringify(archiveInfo)); } catch (e) { /* kept in memory */ }
+}
+
+/* this computer's yearly file must be written again */
+function markArchiveYearDirty(y) {
+  if (!y || isPhoneApp()) return;             // a phone only reads the yearly files
+  if (archiveInfo.dirty.indexOf(y) === -1) archiveInfo.dirty.push(y);
+}
+
+function letterStamp(b) {
+  return (b && (b.updatedAt || b.createdAt)) || '';
+}
+
+function archiveKey(y, id) {
+  return y + '|' + id;
+}
+
+let archiveDbPromise = null;
+function archiveDbOpen() {
+  if (archiveDbPromise) return archiveDbPromise;
+  archiveDbPromise = new Promise((resolve, reject) => {
+    const req = indexedDB.open(ARCHIVE_DB, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(ARCHIVE_LETTERS)) db.createObjectStore(ARCHIVE_LETTERS, { keyPath: 'k' });
+      if (!db.objectStoreNames.contains(ARCHIVE_INDEX)) db.createObjectStore(ARCHIVE_INDEX, { keyPath: 'id' });
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      db.onversionchange = () => { db.close(); archiveDbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => reject(req.error);
+  }).catch(err => { archiveDbPromise = null; throw err; });
+  return archiveDbPromise;
+}
+
+function idbDone(tx) {
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+/* what the archive holds for these ids: id -> { y, u }. Remembered, so a peer's file is cheap to check again */
+const archiveIdCache = new Map();
+async function archiveLookup(ids) {
+  const out = new Map();
+  if (!ids.length || !archiveInfo.count) return out;
+  const ask = [];
+  ids.forEach(id => { const c = archiveIdCache.get(id); if (c) out.set(id, c); else ask.push(id); });
+  if (!ask.length) return out;
+  const db = await archiveDbOpen();
+  for (let k = 0; k < ask.length; k += 1000) {
+    const tx = db.transaction(ARCHIVE_INDEX, 'readonly');
+    const st = tx.objectStore(ARCHIVE_INDEX);
+    ask.slice(k, k + 1000).forEach(id => {
+      const r = st.get(id);
+      r.onsuccess = () => {
+        const v = r.result;
+        if (v && v.id) { const e = { y: v.y, u: v.u || '' }; out.set(id, e); archiveIdCache.set(id, e); }
+      };
+    });
+    await idbDone(tx);
+    if (k + 1000 < ask.length) await yieldToScreen();
+  }
+  if (archiveIdCache.size > 200000) archiveIdCache.clear();
+  return out;
+}
+
+/* letters into the archive; a letter whose year changed leaves its old year. Returns how many are new there */
+async function archivePut(list) {
+  // one row per letter, the last copy given wins
+  const byId = new Map();
+  (list || []).forEach(b => { if (b && b.id && bookYear(b)) byId.set(b.id, b); });
+  list = Array.from(byId.values());
+  if (!list.length) return 0;
+  const db = await archiveDbOpen();
+  const delta = {};
+  let added = 0;
+  for (let k = 0; k < list.length; k += 500) {
+    const tx = db.transaction([ARCHIVE_LETTERS, ARCHIVE_INDEX], 'readwrite');
+    const L = tx.objectStore(ARCHIVE_LETTERS);
+    const I = tx.objectStore(ARCHIVE_INDEX);
+    list.slice(k, k + 500).forEach(b => {
+      const y = bookYear(b);
+      const g = I.get(b.id);
+      g.onsuccess = () => {
+        const prev = g.result;
+        if (prev && prev.y && prev.y !== y) {
+          L.delete(archiveKey(prev.y, b.id));
+          delta[prev.y] = (delta[prev.y] || 0) - 1;
+        }
+        if (!prev || prev.y !== y) delta[y] = (delta[y] || 0) + 1;
+        if (!prev) added++;
+        L.put({ k: archiveKey(y, b.id), b: b });
+        I.put({ id: b.id, y: y, u: letterStamp(b) });
+      };
+    });
+    await idbDone(tx);
+    if (k + 500 < list.length) await yieldToScreen();
+  }
+  list.forEach(b => {
+    archiveIdCache.set(b.id, { y: bookYear(b), u: letterStamp(b) });
+    markArchiveYearDirty(bookYear(b));
+  });
+  Object.keys(delta).forEach(y => {
+    archiveInfo.years[y] = Math.max(0, (Number(archiveInfo.years[y]) || 0) + delta[y]);
+    markArchiveYearDirty(y);
+  });
+  saveArchiveInfo();
+  return added;
+}
+
+/* letters out of the archive (edited again, or deleted). Returns how many were there */
+async function archiveRemove(ids) {
+  ids = Array.from(new Set((ids || []).filter(Boolean)));
+  if (!ids.length || !archiveInfo.count) return 0;
+  const db = await archiveDbOpen();
+  const delta = {};
+  let removed = 0;
+  for (let k = 0; k < ids.length; k += 1000) {
+    const tx = db.transaction([ARCHIVE_LETTERS, ARCHIVE_INDEX], 'readwrite');
+    const L = tx.objectStore(ARCHIVE_LETTERS);
+    const I = tx.objectStore(ARCHIVE_INDEX);
+    ids.slice(k, k + 1000).forEach(id => {
+      const g = I.get(id);
+      g.onsuccess = () => {
+        const prev = g.result;
+        if (!prev) return;
+        L.delete(archiveKey(prev.y, id));
+        I.delete(id);
+        delta[prev.y] = (delta[prev.y] || 0) - 1;
+        removed++;
+      };
+    });
+    await idbDone(tx);
+  }
+  ids.forEach(id => archiveIdCache.delete(id));
+  Object.keys(delta).forEach(y => {
+    archiveInfo.years[y] = Math.max(0, (Number(archiveInfo.years[y]) || 0) + delta[y]);
+    markArchiveYearDirty(y);
+  });
+  saveArchiveInfo();
+  return removed;
+}
+
+/* every archived letter of one year */
+async function archiveGetYear(y) {
+  const db = await archiveDbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(ARCHIVE_LETTERS, 'readonly');
+    const req = tx.objectStore(ARCHIVE_LETTERS).getAll(IDBKeyRange.bound(y + '|', y + '|￿'));
+    req.onsuccess = () => resolve((req.result || []).map(r => r && r.b).filter(Boolean));
+    req.onerror = () => reject(req.error);
+  });
+}
+
+/* the system is started again from nothing: the archive goes too */
+async function archiveClearAll() {
+  try {
+    const db = await archiveDbOpen();
+    const tx = db.transaction([ARCHIVE_LETTERS, ARCHIVE_INDEX], 'readwrite');
+    tx.objectStore(ARCHIVE_LETTERS).clear();
+    tx.objectStore(ARCHIVE_INDEX).clear();
+    await idbDone(tx);
+  } catch (e) { console.error('Archive clear failed', e); }
+  archiveIdCache.clear();
+  forgetArchiveView();
+  archiveInfo = { count: 0, years: {}, lastPass: '', firstDone: false, dirty: [] };
+  saveArchiveInfo();
+  try { localStorage.removeItem(ARCHIVE_SEEN_KEY); } catch (e) {}
+}
+
+/* ── archived letters on screen ─────────────────────────────────────── */
+
+/* an archived letter shown for a past year, unchanged since it was opened */
+function isArchiveCopy(b) {
+  if (!archiveLoaded.size || !b) return false;
+  const a = archiveLoaded.get(b.id);
+  return !!a && a.s === letterStamp(b);
+}
+
+/* the daily register: what is saved, synced and backed up as before */
+function liveBooks() {
+  return archiveLoaded.size ? books.filter(b => !isArchiveCopy(b)) : books;
+}
+
+function forgetArchiveView() {
+  archiveLoaded.clear();
+  archiveLoadedYears.clear();
+}
+
+/*
+  An archived letter on screen that was edited is a daily letter again: it is
+  written to the daily register first, and only then taken out of the
+  archive. One that was deleted leaves the archive.
+*/
+function settleArchive() {
+  if (!archiveLoaded.size) return;
+  const at = new Map();
+  books.forEach(b => at.set(b.id, b));
+  const back = [];
+  const gone = [];
+  archiveLoaded.forEach((a, id) => {
+    const b = at.get(id);
+    if (!b) gone.push(id);
+    else if (a.s !== letterStamp(b)) back.push(b);
+  });
+  if (!back.length && !gone.length) return;
+  back.forEach(b => archiveLoaded.delete(b.id));
+  gone.forEach(id => archiveLoaded.delete(id));
+  (async () => {
+    try {
+      if (back.length) await dbPutBooks(back);
+      await archiveRemove(back.map(b => b.id).concat(gone));
+    } catch (e) { console.error('Archive settle failed', e); }
+  })();
+}
+
+let settleArchiveTimer = null;
+function settleArchiveSoon() {
+  if (!archiveLoaded.size) return;
+  clearTimeout(settleArchiveTimer);
+  settleArchiveTimer = setTimeout(settleArchive, 0);
+}
+
+function parseArchiveFileName(n) {
+  const m = /^daxil-archive-(\d{4})-(.+?)(?: ?\(\d+\))?\.json$/.exec(n || '');
+  return m ? { year: m[1], dev: m[2] } : null;
+}
+
+function myArchiveFileName(y) {
+  return ARCHIVE_PREFIX + y + '-' + (syncSettings.deviceId || 'pc') + '.json';
+}
+
+/* every year that has archived letters, here or in the shared folder */
+function archiveYearsKnown() {
+  const ys = new Set(Object.keys(archiveInfo.years).filter(y => archiveInfo.years[y] > 0));
+  archiveEntries.forEach((h, name) => { const p = parseArchiveFileName(name); if (p) ys.add(p.year); });
+  return Array.from(ys);
+}
+
+async function loadArchiveYear(y) {
+  const list = await archiveGetYear(y);
+  const have = new Set(books.map(b => b.id));
+  let n = 0;
+  list.forEach(b => {
+    // the daily register wins: a letter that is there already is not shown twice
+    if (!b || !b.id || have.has(b.id) || isDeletedBook(b.id)) return;
+    books.push(b);
+    have.add(b.id);
+    archiveLoaded.set(b.id, { s: letterStamp(b), y: y });
+    n++;
+  });
+  archiveLoadedYears.add(y);
+  return n;
+}
+
+function unloadArchiveYears(years) {
+  settleArchive();
+  const ys = new Set(years);
+  books = books.filter(b => {
+    const a = archiveLoaded.get(b.id);
+    if (a && ys.has(a.y) && a.s === letterStamp(b)) { archiveLoaded.delete(b.id); return false; }
+    return true;
+  });
+  archiveLoaded.forEach((a, id) => { if (ys.has(a.y)) archiveLoaded.delete(id); });
+  ys.forEach(y => archiveLoadedYears.delete(y));
+}
+
+/* the year on screen decides which archived years are brought in */
+async function syncArchiveView() {
+  if (!idbAvailable) return false;
+  const v = currentViewYear();
+  const cy = currentYearStr();
+  const known = archiveYearsKnown().filter(y => y < cy).sort().reverse();
+  let want = [];
+  if (v === 'all') want = known;
+  else if (v !== cy && known.indexOf(v) > -1) want = [v];
+
+  const drop = Array.from(archiveLoadedYears).filter(y => want.indexOf(y) === -1);
+  if (drop.length) unloadArchiveYears(drop);
+
+  let total = archiveLoaded.size;
+  let capped = false;
+  let loaded = false;
+  for (const y of want) {
+    if (archiveLoadedYears.has(y)) continue;
+    if (v === 'all' && total + (Number(archiveInfo.years[y]) || 0) > ARCHIVE_VIEW_MAX) { capped = true; break; }
+    // newer copies from the other computers first (on a phone, the only way in —
+    // but a phone does not download every year at once for «هەموو ساڵەکان»)
+    if (!(isPhoneApp() && v === 'all')) {
+      try { await importArchiveYear(y); } catch (e) { console.error(e); }
+    }
+    total += await loadArchiveYear(y);
+    loaded = true;
+  }
+  if (capped) {
+    showErrorToast('ئەرشیفەکە زۆر گەورەیە بۆ پیشاندانی هەموو ساڵەکان پێکەوە — نوێترین ساڵەکان پیشان دەدرێن. ' +
+      'بۆ ساڵێکی کۆنتر، خودی ساڵەکە هەڵبژێرە.');
+  }
+  return loaded;
+}
+
+/* one archive job at a time, and never in the middle of a sync pass */
+async function withArchiveLock(fn) {
+  const until = Date.now() + 60000;
+  while ((syncBusy || archiveBusy) && Date.now() < until) await new Promise(r => setTimeout(r, 150));
+  archiveBusy = true;
+  try { return await fn(); }
+  finally { archiveBusy = false; }
+}
+
+let archiveViewChain = Promise.resolve();
+function refreshArchiveView() {
+  archiveViewChain = archiveViewChain
+    .then(() => withArchiveLock(syncArchiveView))
+    .catch(e => console.error('Archive view failed', e));
+  return archiveViewChain;
+}
+
+/* a past year (or all years) is on screen and archived letters belong to it */
+function archiveViewWanted() {
+  if (!idbAvailable) return false;
+  const v = currentViewYear();
+  if (v !== 'all' && !isPastYearView()) return archiveLoadedYears.size > 0;
+  return archiveYearsKnown().length > 0;
+}
+
+/* ── the monthly move ───────────────────────────────────────────────── */
+
+function archiveMonthNow() {
+  return localISO(new Date()).slice(0, 7);
+}
+
+function archiveAllowed() {
+  return !!idbAvailable && typeof indexedDB !== 'undefined' &&
+    waridaAuto.yearly !== false && outnumAuto.yearly !== false;
+}
+
+function archiveEligible(b, cy, cutoffMs) {
+  if (!b || !b.id || b.isSecret) return false;
+  const y = bookYear(b);
+  if (!y || !(y < cy)) return false;                       // this year's letters stay
+  if (isOutstanding(b)) return false;                      // still open: ماوە
+  const ts = transferState(b);
+  if (ts === 'awaiting' || ts === 'rejected') return false;  // a department still has to act
+  if ((b.followUps || []).some(f => !(followUpYear(f) < cy))) return false;  // a follow-up of this year
+  const t = new Date(letterStamp(b)).getTime();
+  return !isNaN(t) && t <= cutoffMs;
+}
+
+function archiveDue() {
+  return archiveAllowed() && dataIsLoaded() && archiveInfo.lastPass !== archiveMonthNow();
+}
+
+async function runArchivePass() {
+  if (!archiveAllowed()) return 0;
+  const cy = currentYearStr();
+  const cutoff = Date.now() - ARCHIVE_AFTER_DAYS * 86400000;
+  const due = books.filter(b => !isArchiveCopy(b) && archiveEligible(b, cy, cutoff));
+  const gone = new Set();
+  if (due.length) {
+    if (!archiveInfo.firstDone) {
+      // the very first time: a complete copy of how things were, before anything moves
+      await takeSnapshot('پێش یەکەم ئەرشیفکردن');
+      if (!isPhoneApp()) { try { await writeDailyBackup(true); } catch (e) { /* the snapshot is kept */ } }
+      archiveInfo.firstDone = true;
+      saveArchiveInfo();
+    }
+    const picked = new Map(due.map(b => [b.id, letterStamp(b)]));
+    // a letter someone changed while this ran stays in the daily register
+    const unchanged = () => {
+      const now = new Map();
+      books.forEach(b => now.set(b.id, b));
+      return id => { const b = now.get(id); return !!b && letterStamp(b) === picked.get(id); };
+    };
+    for (let k = 0; k < due.length; k += 500) {
+      const part = due.slice(k, k + 500);
+      await archivePut(part);                              // into the archive first
+      const same = unchanged();
+      const ids = part.map(b => b.id).filter(same);
+      if (ids.length) await dbDeleteBooks(ids);            // and only then out of the daily register
+      ids.forEach(id => gone.add(id));
+      await yieldToScreen();
+    }
+    const same = unchanged();
+    books = books.filter(b => {
+      if (!gone.has(b.id) || !same(b.id)) return true;
+      const y = bookYear(b);
+      // a year that is on screen keeps showing its letters
+      if (archiveLoadedYears.has(y)) { archiveLoaded.set(b.id, { s: letterStamp(b), y: y }); return true; }
+      return false;
+    });
+    if (gone.size) {
+      fullWriteForced = true;                              // the complete sync file gets smaller now
+      if (!isPhoneApp()) localDirty = true;
+      renderYearControls();
+      render();
+    }
+  }
+  archiveInfo.lastPass = archiveMonthNow();
+  saveArchiveInfo();
+  return gone.size;
+}
+
+/* ── the yearly files in the shared folder ──────────────────────────── */
+
+async function writeArchiveFiles(maxYears) {
+  if (isPhoneApp()) { archiveInfo.dirty = []; saveArchiveInfo(); return 0; }
+  if (!syncDirHandle || !syncSettings.enabled || !officeKeyOk || clockBlocked()) return 0;
+  const todo = archiveInfo.dirty.slice().sort().reverse();
+  let done = 0;
+  for (const y of todo) {
+    if (done >= maxYears) break;
+    const list = (await archiveGetYear(y)).filter(b => !isDeletedBook(b.id));
+    const name = myArchiveFileName(y);
+    if (list.length) {
+      await writeJsonFile(name, {
+        kind: 'archive',
+        deviceId: syncSettings.deviceId,
+        deviceName: syncSettings.deviceName || syncSettings.deviceId,
+        year: y,
+        savedAt: new Date().toISOString(),
+        count: list.length,
+        books: list
+      });
+    } else {
+      try { await syncDirHandle.removeEntry(name); } catch (e) { /* there was none */ }
+    }
+    archiveInfo.dirty = archiveInfo.dirty.filter(x => x !== y);
+    saveArchiveInfo();
+    done++;
+    await yieldToScreen();
+  }
+  return done;
+}
+
+function readArchiveSeen() {
+  return readLocal(ARCHIVE_SEEN_KEY, {}) || {};
+}
+
+function noteArchiveSeen(name, sig) {
+  const seen = readArchiveSeen();
+  seen[name] = sig;
+  try { localStorage.setItem(ARCHIVE_SEEN_KEY, JSON.stringify(seen)); } catch (e) {}
+}
+
+/*
+  Letters from another computer's yearly file. Newest wins, as everywhere:
+  a letter in the daily register is updated there; any other letter goes
+  into the archive when it is new or newer.
+*/
+async function mergeArchiveLetters(list) {
+  if (!Array.isArray(list) || !list.length) return 0;
+  const at = new Map();
+  books.forEach((b, i) => at.set(b.id, i));
+  let changed = 0;
+  let onScreen = false;
+  const liveUpd = [];
+  for (let k = 0; k < list.length; k += 1000) {
+    const part = list.slice(k, k + 1000).filter(rb => rb && rb.id && bookYear(rb) && !isDeletedBook(rb.id));
+    const toArchive = [];
+    const ask = [];
+    part.forEach(rb => {
+      sanitizeRemoteStamps(rb);
+      const i = at.get(rb.id);
+      if (i === undefined) { ask.push(rb); return; }
+      const cur = books[i];
+      if (!(letterStamp(rb) > letterStamp(cur))) return;
+      if (isArchiveCopy(cur)) {
+        books[i] = rb;
+        archiveLoaded.set(rb.id, { s: letterStamp(rb), y: bookYear(rb) });
+        toArchive.push(rb);
+      } else {
+        books[i] = rb;
+        liveUpd.push(rb);
+      }
+      onScreen = true;
+    });
+    if (ask.length) {
+      const known = await archiveLookup(ask.map(r => r.id));
+      ask.forEach(rb => {
+        const p = known.get(rb.id);
+        if (!p || letterStamp(rb) > (p.u || '')) toArchive.push(rb);
+      });
+    }
+    if (toArchive.length) {
+      changed += toArchive.length;
+      await archivePut(toArchive);
+      // a year on screen shows what just arrived
+      toArchive.forEach(rb => {
+        const y = bookYear(rb);
+        if (at.get(rb.id) === undefined && archiveLoadedYears.has(y)) {
+          books.push(rb);
+          at.set(rb.id, books.length - 1);
+          archiveLoaded.set(rb.id, { s: letterStamp(rb), y: y });
+          onScreen = true;
+        }
+      });
+    }
+    await yieldToScreen();
+  }
+  if (liveUpd.length) {
+    try { await dbPutBooks(liveUpd); } catch (e) { reportStorageFailure(e); }
+    if (!isPhoneApp()) localDirty = true;
+    changed += liveUpd.length;
+  }
+  if (onScreen) render();
+  if (changed) renderYearControls();
+  return changed;
+}
+
+async function importArchiveFile(name, h, file) {
+  try {
+    file = file || await h.getFile();
+    const sig = file.lastModified + '|' + file.size;
+    if (readArchiveSeen()[name] === sig) return 0;
+    const text = await file.text();
+    let opened;
+    try { opened = await openJson(text); }
+    catch (e) {
+      if (e && e.vault === 'other-key') noteArchiveSeen(name, sig);
+      return 0;
+    }
+    if (!opened || !opened.sealed) return 0;   // archived letters are only taken from sealed files
+    const n = await mergeArchiveLetters((opened.data || {}).books);
+    noteArchiveSeen(name, sig);
+    return n;
+  } catch (e) {
+    return 0;                                   // half-written, or busy: read again later
+  }
+}
+
+/* the other computers' files for one year (a past year was just opened) */
+async function importArchiveYear(y) {
+  if (!syncDirHandle || !syncSettings.enabled || !officeKeyOk) return 0;
+  const mine = syncSettings.deviceId || 'pc';
+  let n = 0;
+  for (const [name, h] of Array.from(archiveEntries)) {
+    const p = parseArchiveFileName(name);
+    if (!p || p.year !== y || p.dev === mine) continue;
+    n += await importArchiveFile(name, h);
+  }
+  return n;
+}
+
+/* in the background, at most one changed file of another computer per step */
+let archiveCursor = 0;
+async function importNextArchiveFile() {
+  const mine = syncSettings.deviceId || 'pc';
+  const names = Array.from(archiveEntries.keys()).filter(n => {
+    const p = parseArchiveFileName(n);
+    return p && p.dev !== mine;
+  });
+  if (!names.length) return 0;
+  const seen = readArchiveSeen();
+  const look = Math.min(names.length, 25);
+  for (let i = 0; i < look; i++) {
+    const idx = (archiveCursor + i) % names.length;
+    const name = names[idx];
+    const h = archiveEntries.get(name);
+    let file;
+    try { file = await h.getFile(); } catch (e) { continue; }
+    if (seen[name] === file.lastModified + '|' + file.size) continue;
+    archiveCursor = (idx + 1) % names.length;
+    return importArchiveFile(name, h, file);
+  }
+  archiveCursor = (archiveCursor + look) % names.length;
+  return 0;
+}
+
+/*
+  The archive's background work, one small step at a time and only when
+  nobody is typing: the monthly move, then this computer's yearly files,
+  then the other computers' yearly files.
+*/
+async function archiveTick(force) {
+  if (!dataIsLoaded() || !idbAvailable) return;
+  if (!force && Date.now() - lastUserInputAt < ARCHIVE_IDLE_MS) return;
+  if (archiveBusy || syncBusy) return;
+  archiveBusy = true;
+  try {
+    if (archiveDue()) await runArchivePass();
+    else if (archiveInfo.dirty.length) await writeArchiveFiles(1);
+    else if (!isPhoneApp() && syncDirHandle && syncSettings.enabled && officeKeyOk) await importNextArchiveFile();
+  } catch (e) {
+    console.error('Archive step failed', e);
+  } finally {
+    archiveBusy = false;
+  }
+}
+
+let archiveLoopTimer = null;
+function startArchiveLoop() {
+  if (archiveLoopTimer) return;
+  archiveLoopTimer = setInterval(() => { archiveTick(false); }, ARCHIVE_TICK_MS);
+}
+
+/*
+  Letters arriving from another computer that this one has already archived:
+  an older or equal copy is left out (the archive has it); a newer one comes
+  back into the daily register, and leaves the archive once it is saved.
+*/
+const unarchiveAfterSave = [];
+async function filterArchivedRemote(list, have) {
+  if (!Array.isArray(list) || !list.length || !archiveInfo.count) return list;
+  const ask = [];
+  list.forEach(rb => { if (rb && rb.id && !have.has(rb.id) && !isDeletedBook(rb.id)) ask.push(rb.id); });
+  if (!ask.length) return list;
+  const found = await archiveLookup(ask);
+  if (!found.size) return list;
+  return list.filter(rb => {
+    const p = rb && found.get(rb.id);
+    if (!p) return true;
+    sanitizeRemoteStamps(rb);
+    if (letterStamp(rb) > (p.u || '')) { unarchiveAfterSave.push(rb.id); return true; }
+    return false;
+  });
+}
+
+/* every archived letter, as one file for the full backup (built a year at a time) */
+async function archiveBackupBlob() {
+  const parts = ['{"app":"daxil","kind":"archive","exportedAt":' + JSON.stringify(new Date().toISOString()) +
+    ',"count":' + archiveInfo.count + ',"books":['];
+  let first = true;
+  const years = Object.keys(archiveInfo.years).filter(y => archiveInfo.years[y] > 0).sort();
+  for (const y of years) {
+    const list = (await archiveGetYear(y)).filter(b => !isDeletedBook(b.id));
+    if (!list.length) continue;
+    parts.push((first ? '' : ',') + JSON.stringify(list).slice(1, -1));
+    first = false;
+    await yieldToScreen();
+  }
+  parts.push(']}');
+  return new Blob(parts, { type: 'application/json' });
+}
+
 /* ask the browser not to evict this data when the disk gets tight */
 async function requestPersistentStorage() {
   try {
@@ -11559,6 +12371,7 @@ async function requestPersistentStorage() {
 }
 
 async function loadBooks() {
+  forgetArchiveView();
   books = [];
   try {
     books = await dbGetAllBooks();
@@ -11642,7 +12455,8 @@ async function saveBooks() {
     return;
   }
   try {
-    await dbPutBooks(books);
+    await dbPutBooks(liveBooks());
+    settleArchiveSoon();
     refreshStorageInfo();
   } catch (e) { reportStorageFailure(e); }
 }
@@ -11652,6 +12466,7 @@ async function saveOneBook(b) {
   if (!idbAvailable) return saveBooks();
   try {
     await dbPutBooks([b]);
+    settleArchiveSoon();
     refreshStorageInfo();
   } catch (e) { reportStorageFailure(e); }
 }
@@ -15246,10 +16061,21 @@ document.getElementById('saveBrandBtn').addEventListener('click', () => {
   showOkToast('ناوەکان نوێکرانەوە.');
 });
 
-document.getElementById('yearSelect').addEventListener('change', e => {
+document.getElementById('yearSelect').addEventListener('change', async e => {
   viewYear = e.target.value;
   renderYearControls();
-  render();
+  render();                                   // what is already here shows at once
+  if (archiveViewWanted()) {
+    // the archived letters of that year (or of all years) are brought in
+    const sel = document.getElementById('yearSelect');
+    if (currentViewYear() === 'all' || isPastYearView()) {
+      showOkToast('ئەرشیفی ' + (currentViewYear() === 'all' ? 'ساڵانی ڕابردوو' : 'ساڵی ' + currentViewYear()) + ' دەکرێتەوە…');
+    }
+    sel.disabled = true;
+    try { await refreshArchiveView(); } finally { sel.disabled = false; }
+    renderYearControls();
+    render();
+  }
   if (document.getElementById('secretView').style.display === 'block') renderSecret();
 });
 
@@ -17090,6 +17916,14 @@ async function buildEverythingFiles(tag) {
       blob: new Blob([arr], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     });
   }
+  // the archived letters of past years, as one more file
+  if (archiveInfo.count) {
+    files.push({
+      name: 'daxil-' + tag + '-archive-' + stamp + '.json', short: 'ئەرشیف',
+      what: 'ئەرشیفی ساڵانی ڕابردوو \u2014 ' + archiveInfo.count + ' نووسراو',
+      blob: await archiveBackupBlob()
+    });
+  }
   if (!users.length) loadUsers();
   files.push({
     name: 'daxil-users-' + tag + '-' + stamp + '.json', short: 'بەکارهێنەران', what: 'بەکارهێنەران',
@@ -17137,6 +17971,7 @@ function showFullBackupResult(host, pack) {
       ' <span style="color:var(--ink-soft);">(' + escapeHtml(f.what) + ')</span>').join('<br>') +
     '<br><br><b>ئەم باکئەپە ئەمانەی تێدایە:</b><br>' +
     '&nbsp;&nbsp;\u2022 تیمی ١: <b>' + (d.books || []).length + '</b> نووسراو<br>' +
+    (d.archivedCount ? '&nbsp;&nbsp;\u2022 ئەرشیفی ساڵانی ڕابردوو: <b>' + d.archivedCount + '</b> نووسراو (لە فایلێکی جیادا)<br>' : '') +
     (t2 ? '&nbsp;&nbsp;\u2022 تیمی ٢ (نهێنی): <b>' + (d.secretBooks || []).length + '</b> نووسراو<br>' : '') +
     '&nbsp;&nbsp;\u2022 بەکارهێنەران: <b>' + (d.users || []).length + '</b><br>' +
     '&nbsp;&nbsp;\u2022 ژمارەی واریدە (ساڵی ' + escapeHtml(String(c.year || '')) + ') \u2014 تیمی ١: دوایین ' + v(t1.lastWarida) +
@@ -17193,7 +18028,7 @@ function numberCountersSnapshot() {
 /* the full backup as a workbook: both teams, the numbers of both, and the accounts (never a password) */
 function buildFullBackupWorkbook() {
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(books.map(bookToRow)), 'تیمی ١');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(liveBooks().map(bookToRow)), 'تیمی ١');
   const c = numberCountersSnapshot();
   if (c.team2) {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(secretRowsForExcel(secretBooks || [])), 'تیمی ٢ نهێنی');
@@ -17242,11 +18077,15 @@ function buildFullBackupSync(fullLog) {
     exportedAt: new Date().toISOString(),
     exportedBy: actorLabel(),
     counts: {
-      books: books.length,
+      books: liveBooks().length,
+      archived: archiveInfo.count,
       users: users.length,
       contacts: contacts.length
     },
-    books: books,
+    books: liveBooks(),
+    // the archived letters of past years live in their own files (daxil-archive-*)
+    archivedCount: archiveInfo.count,
+    archivedYears: archiveInfo.years,
     users: users,
     places: places,
     subjects: subjects,
@@ -17393,6 +18232,15 @@ async function offerRestoreIfEmpty() {
 
 async function applyImportedBackup(parsed) {
   {
+    // the archive file of a full backup: its letters go back into the archive
+    if (parsed && parsed.kind === 'archive' && Array.isArray(parsed.books)) {
+      if (!confirm('ئەم فایلە ئەرشیفی ساڵانی ڕابردووە: ' + parsed.books.length + ' نووسراو.\n\n' +
+          'تێکەڵی ئەرشیفی ئەم کۆمپیوتەرە دەکرێن — هیچ شتێکی ئێستا ناسڕدرێتەوە. بەردەوام بیت؟')) return false;
+      const n = await withArchiveLock(() => mergeArchiveLetters(parsed.books));
+      renderYearControls();
+      alert('\u2713 ئەرشیف بارکرا: ' + n + ' نووسراوی نوێ یان نوێتر.');
+      return true;
+    }
 
     // old backups were a plain array of records
     const isFull = parsed && !Array.isArray(parsed) && Array.isArray(parsed.books);

@@ -477,20 +477,45 @@
         });
       })();
 
+      /*
+        The sweep reads every stored record, so it runs once per database, not
+        on every start: with the yearly archive (a million letters) reading all
+        of them blocked the screen for most of a minute at each start. It runs
+        again only after a start without this computer's key, when records may
+        have been written unsealed. The archive database is born sealed.
+      */
+      var SWEEP_DONE = 'daxilSealSweepDone';
+      var SWEEP_NEEDED = 'daxilSealSweepNeeded';
+      var BORN_SEALED = { 'daxil-archive': true };
       window.addEventListener('load', function () {
         setTimeout(function sealOldRecords() {
           if (!indexedDB.databases) return;
+          var done = {};
+          try { done = JSON.parse(localStorage.getItem(SWEEP_DONE) || '{}') || {}; } catch (e) { done = {}; }
+          var needed = rawGetItem.call(localStorage, SWEEP_NEEDED) !== null;
+          var markDone = function (name) {
+            done[name] = 1;
+            try { localStorage.setItem(SWEEP_DONE, JSON.stringify(done)); } catch (e) {}
+          };
           indexedDB.databases().then(function (list) {
-            list.forEach(function (info) {
-              if (!info.name || UNSEALED_DBS[info.name]) return;
+            var todo = list.filter(function (info) {
+              if (!info.name || UNSEALED_DBS[info.name]) return false;
+              return needed || !(done[info.name] || BORN_SEALED[info.name]);
+            });
+            var dbsLeft = todo.length;
+            var dbDone = function (name) {
+              markDone(name);
+              if (--dbsLeft === 0 && needed) { try { localStorage.removeItem(SWEEP_NEEDED); } catch (e) {} }
+            };
+            todo.forEach(function (info) {
               var req = indexedDB.open(info.name);
               req.onsuccess = function () {
                 var db = rawResult.call(req);
                 db.onversionchange = function () { db.close(); };   // never stand in the tracker's way
                 var names = Array.prototype.slice.call(db.objectStoreNames);
-                if (!names.length) { db.close(); return; }
+                if (!names.length) { db.close(); dbDone(info.name); return; }
                 var pending = names.length;
-                var doneOne = function () { if (--pending === 0) db.close(); };
+                var doneOne = function () { if (--pending === 0) { db.close(); dbDone(info.name); } };
                 names.forEach(function (storeName) {
                   try {
                     var tx = db.transaction(storeName, 'readwrite');
@@ -511,6 +536,9 @@
         }, 5000);
       });
     } catch (e) { console.error('Desktop shim: storage sealing could not be set up', e); }
+  } else {
+    // no key on this start: whatever is written now is not sealed, so the next start with the key sweeps again
+    try { localStorage.setItem('daxilSealSweepNeeded', '1'); } catch (e) {}
   }
 
   /* ---------------- a newer version ---------------- */
